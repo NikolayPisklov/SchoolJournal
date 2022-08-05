@@ -1,0 +1,18 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace SchoolJournal.Models
+{
+    public partial class Subject
+    {
+        public Subject()
+        {
+            Journals = new HashSet<Journal>();
+        }
+
+        public int Id { get; set; }
+        public string Title { get; set; } = null!;
+
+        public virtual ICollection<Journal> Journals { get; set; }
+    }
+}
