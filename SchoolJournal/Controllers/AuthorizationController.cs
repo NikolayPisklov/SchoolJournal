@@ -32,13 +32,13 @@ namespace SchoolJournal.Controllers
             {
                 SetTeacherProperties(user);
                 SetSessionVariablesForTeacher(user);
-                return RedirectToAction("Home", "Home");
+                return RedirectToAction("Home", "Home", user);
             }
             else if (IsAdmin(user))
             {
                 SetAdminProperties(user);
                 SetSessionVariablesForAdmin(user);
-                return RedirectToAction("Home", "Home");
+                return RedirectToAction("Home", "Home", user);
             }
             else 
             {
@@ -96,7 +96,6 @@ namespace SchoolJournal.Controllers
         private void SetSessionVariablesForStudent(User user) 
         {
             HttpContext.Session.SetString("Status", "Student");
-            HttpContext.Session.SetInt32("ClassId", (int)user.FkClass);
             HttpContext.Session.SetString("UserObject", JsonSerializer.Serialize(user));
         }
         private void SetStudentProperties(User user) 

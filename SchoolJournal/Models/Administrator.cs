@@ -12,6 +12,6 @@ namespace SchoolJournal.Models
         public string Surname { get; set; } = null!;
         public string Middlename { get; set; } = null!;
         public DateTime HireDate { get; set; }
-        public DateTime FireDate { get; set; }
+        public DateTime? FireDate { get; set; }
     }
 }
