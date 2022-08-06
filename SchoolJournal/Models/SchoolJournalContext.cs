@@ -39,6 +39,8 @@ namespace SchoolJournal.Models
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.UseCollation("Latin1_General_100_CI_AS_SC_UTF8");
+
             modelBuilder.Entity<Administrator>(entity =>
             {
                 entity.ToTable("Administrator");
