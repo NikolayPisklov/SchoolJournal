@@ -7,8 +7,29 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
 </head>
 <body>
-    <div style="background-color:#354F52; height: 120px">
-        <h1 class="text-center pt-3" style="color:#CAD2C5">School Journal</h1>
+    <div class="text-center" style="background-color:#354F52; height: 120px">
+        <h1 class="pt-3" style="color:#CAD2C5">School Journal</h1>
+        @if (Context.Session.GetString("Status") == "Student")
+        {
+            <a class="me-3" style="color:#CAD2C5">Журнали</a>
+            <a class="me-3" style="color:#CAD2C5">Розклад</a>
+            <a class="me-3" style="color:#CAD2C5">Успішність</a>
+        }
+        else if (Context.Session.GetString("Status") == "Teacher")
+        {
+            <a class="me-3" style="color:#CAD2C5">Журнали</a>
+            <a class="me-3" style="color:#CAD2C5">Розклад</a>
+        }
+        else if (Context.Session.GetString("Status") == "Admin")
+        {
+            <a class="me-3" style="color:#CAD2C5">Журнали</a>
+            <a class="me-3" style="color:#CAD2C5">Розклад</a>
+            <a class="me-3" style="color:#CAD2C5">Адміністрування</a>
+        }
+        else
+        {
+            
+        }
     </div>
     <div>
         @RenderBody()
