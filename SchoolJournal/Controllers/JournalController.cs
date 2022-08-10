@@ -16,15 +16,17 @@ namespace SchoolJournal.Controllers
             _db = db;            
         }
 
-        public IActionResult Journal(int journalId)
+        public IActionResult Journal(int journalId, int? pageNumber)
         {
-            _journal = _db.Journals.Where(j => j.Id == journalId).First();
+            _journal = _db.Journals.Where(j => j.Id == journalId).First();            
+            List<Lesson> lessons = _db.Lessons.Where(l => l.FkJournal == _journal.Id).ToList();
             ViewBag.ClassTitle = _db.Classes.Where(c => c.Id == _journal.FkClass).Select(c => c.Title).First();
             ViewBag.SubjectTitle = _db.Subjects.Where(s => s.Id == _journal.FkSubject).Select(s => s.Title).First();
-            ViewBag.Lessons = _db.Lessons.Where(l => l.FkJournal == _journal.Id).ToList();
+            ViewBag.Lessons = lessons;
             ViewBag.Progresses = GetProgressContent();
             ViewBag.Students = _db.Students.Where(s => s.FkClass == _journal.FkClass).ToList();
-            return View();
+            ViewBag.Journal = _journal;
+            return View(Paging<Lesson>.Create(lessons, pageNumber ?? _currentPage, 15));
         }
 
         private List<ProgressContent> GetProgressContent() 
