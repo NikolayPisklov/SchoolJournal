@@ -20,12 +20,7 @@ namespace SchoolJournal.Controllers
         {
             _journal = _db.Journals.Where(j => j.Id == journalId).First();            
             List<Lesson> lessons = _db.Lessons.Where(l => l.FkJournal == _journal.Id).ToList();
-            ViewBag.ClassTitle = _db.Classes.Where(c => c.Id == _journal.FkClass).Select(c => c.Title).First();
-            ViewBag.SubjectTitle = _db.Subjects.Where(s => s.Id == _journal.FkSubject).Select(s => s.Title).First();
-            ViewBag.Lessons = lessons;
-            ViewBag.Progresses = GetProgressContent();
-            ViewBag.Students = _db.Students.Where(s => s.FkClass == _journal.FkClass).ToList();
-            ViewBag.Journal = _journal;
+            SetViewBagForJournal(lessons);
             return View(Paging<Lesson>.Create(lessons, pageNumber ?? _currentPage, 15));
         }
 
@@ -37,6 +32,15 @@ namespace SchoolJournal.Controllers
                     where l.FkJournal == _journal.Id
                     select new ProgressContent
                     { Progress = p, Mark = m }).ToList();
+        }
+        private void SetViewBagForJournal(List<Lesson> lessons) 
+        {
+            ViewBag.ClassTitle = _db.Classes.Where(c => c.Id == _journal.FkClass).Select(c => c.Title).First();
+            ViewBag.SubjectTitle = _db.Subjects.Where(s => s.Id == _journal.FkSubject).Select(s => s.Title).First();
+            ViewBag.Lessons = lessons;
+            ViewBag.Progresses = GetProgressContent();
+            ViewBag.Students = _db.Students.Where(s => s.FkClass == _journal.FkClass).ToList();
+            ViewBag.Journal = _journal;
         }
     }
 }
