@@ -84,7 +84,7 @@ namespace SchoolJournal.Controllers
                    join t in _db.Teachers on j.FkTeacher equals t.Id
                    where j.FkClass == classId && j.FkSchoolYear == SchoolDateTime.GetCurrentYearId(_db)
                    select new JournalListContent
-                   { Subject = s, Class = c, Teacher = t }).ToList();
+                   { Journal = j, Subject = s, Class = c, Teacher = t }).ToList();
         }
         private List<JournalListContent> GetJournalListContentForTeacher(int teacherId) 
         {
@@ -94,7 +94,7 @@ namespace SchoolJournal.Controllers
                     join t in _db.Teachers on j.FkTeacher equals t.Id
                     where j.FkTeacher == teacherId && j.FkSchoolYear == SchoolDateTime.GetCurrentYearId(_db)
                     select new JournalListContent
-                    { Subject = s, Class = c, Teacher = t }).ToList();
+                    { Journal = j, Subject = s, Class = c, Teacher = t }).ToList();
         }
         private List<JournalListContent> GetJournalListContentForAdmin() 
         {
@@ -105,7 +105,7 @@ namespace SchoolJournal.Controllers
                     where j.FkSchoolYear == SchoolDateTime.GetCurrentYearId(_db)
                     orderby c.Title.Length, c.Title
                     select new JournalListContent
-                    { Subject = s, Class = c, Teacher = t }).ToList();
+                    { Journal = j, Subject = s, Class = c, Teacher = t }).ToList();
         }
         private List<JournalListContent> GetJournalListFilteredBySubject(int subjectId, List<JournalListContent> journals) 
         {
