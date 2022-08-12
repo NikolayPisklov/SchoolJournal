@@ -1,5 +1,4 @@
 ﻿<!DOCTYPE html>
-
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
@@ -11,7 +10,7 @@
         <h1 class="pt-3" style="color:#CAD2C5">School Journal</h1>
         @if (Context.Session.GetString("Status") == "Student")
         {
-            <a class="me-3" style="color:#CAD2C5">Журнали</a>
+            <a asp-controller="Home" asp-action="Navigation" class="me-3" style="color:#CAD2C5">Журнали</a>
             <a class="me-3" style="color:#CAD2C5">Розклад</a>
             <a class="me-3" style="color:#CAD2C5">Успішність</a>
         }

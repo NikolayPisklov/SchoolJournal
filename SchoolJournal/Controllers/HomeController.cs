@@ -21,7 +21,7 @@ namespace SchoolJournal.Controllers
 
 
         [HttpGet]
-        public IActionResult Home(User user) 
+        public IActionResult Home(User user)
         {
             if (HttpContext.Session.GetString("Status") == "Student")
             {
@@ -39,14 +39,14 @@ namespace SchoolJournal.Controllers
                 SetFiltersViewBags();
                 return View(journals);
             }
-            else 
+            else
             {
                 ViewBag.Message = "Час вашої сесії вийшов! Просимо авторизуватись знову!";
                 return RedirectToAction("Authorization", "Authorization");
             }
         }
         [HttpPost]
-        public IActionResult Home(int? subjectId, int? classRangId)  
+        public IActionResult Home(int? subjectId, int? classRangId)
         {
             List<JournalListContent> journals = GetJournalListContentForAdmin();
             if (subjectId != null && classRangId == null)
@@ -68,13 +68,30 @@ namespace SchoolJournal.Controllers
                 SetFiltersViewBags();
                 return View(filteredJournals);
             }
-            else 
+            else
             {
                 SetFiltersViewBags();
                 return View(journals);
             }
         }
-
+        public IActionResult Navigation()
+        {
+            User? user = JsonSerializer.Deserialize<User>(HttpContext.Session.GetString("UserObject"));
+            if (user == null)
+            {
+                return RedirectToAction("Authorization", "Authorization");
+            }
+            else
+            {
+                return RedirectToAction("Home", user);
+            }
+        }
+        public IActionResult RedirectToJournal(int journalId) 
+        {
+            Journal journal = _db.Journals.Where(j => j.Id == journalId).First();
+            SessionJson.SetObjectAsJson(HttpContext.Session, "Journal", journal);
+            return RedirectToAction("Journal", "Journal");
+        }
 
         private List<JournalListContent> GetJournalListContentForStudent(int classId) 
         {
