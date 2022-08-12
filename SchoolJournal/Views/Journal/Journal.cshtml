@@ -61,8 +61,12 @@
     <thead style="background-color:#cad2c5;" class="text-dark">
         <tr>
             <th style="width: 10%">Дата уроку</th>
-            <th style="width: 30%">Тема</th>
+            <th style="width: 20%">Тема</th>
             <th style="width: 60%">Домашнє завдання</th>
+            @if (Context.Session.GetString("Status") == "Teacher")
+            {
+                <th style="width: 10%"></th>
+            }
         </tr>
     </thead>
     <tbody>
@@ -72,6 +76,11 @@
                 <td>@lesson.Date.ToString("dd.MM.yyyy")</td>
                 <td>@lesson.Theme</td>
                 <td>@lesson.Homework</td>
+                @if (Context.Session.GetString("Status") == "Teacher")
+                {
+                    <td class="text-center"><a asp-action="EditLesson" asp-route-lessonId="@lesson.Id" class="btn btn-sm" 
+                        style="background-color: #2F3E46; color: #CAD2C5">Редагувати</a></td>
+                }
             </tr>
         }
     </tbody>

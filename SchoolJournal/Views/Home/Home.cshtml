@@ -47,7 +47,7 @@
                     <td>@j.Subject.Title</td>
                     <td>@j.Class.Title</td>
                     <td>@j.Teacher.Surname @j.Teacher.Name @j.Teacher.Middlename</td>
-                    <td><a asp-controller="Journal" asp-action="Journal" asp-route-journalId="@j.Journal.Id"
+                    <td><a asp-action="RedirectToJournal" asp-route-journalId="@j.Journal.Id"
                         class="btn btn-sm" style="background-color:#2F3E46; color:#CAD2C5">Переглянути</a></td>
                 </tr>                
             }

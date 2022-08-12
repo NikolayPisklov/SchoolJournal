@@ -1,0 +1,29 @@
+﻿@model Lesson
+@{
+    Layout = "_MainLayout";
+    ViewBag.Title = $"Редагування заняття за {Model.Date.ToString("dd.MM")}";
+}
+<h3 class="ms-3 mt-3 mb-3">Редагування заняття за @Model.Date.ToString("dd.MM.yyyy")</h3>
+<form method="post">
+    @Html.HiddenFor(m => m.Id)
+    @Html.HiddenFor(m => m.FkJournal)
+    @Html.HiddenFor(m => m.FkLessonTime)
+    @Html.HiddenFor(m => m.Date)
+    @Html.HiddenFor(m => m.FkJournalNavigation)
+    @Html.HiddenFor(m => m.FkLessonTimeNavigation)
+    <label asp-for="Theme" class="ms-4 mb-2 fs-5">Тема заняття</label>
+    <div class="row ms-2 mb-3">
+        <div class="col-5">
+            <input asp-for="Theme" value="@Model.Theme" class="form-control">
+        </div>
+    </div>
+
+    <label asp-for="Homework" class="ms-4 mb-2 fs-5">Домашнє завдання</label>
+    <div class="row ms-2">
+        <div class="col-5">
+            <textarea asp-for="Homework" class="form-control">@Model.Homework</textarea>
+        </div>
+    </div>
+
+    <button type="submit" class="btn mt-3 ms-3 text-dark" style="background-color: #CAD2C5">Зберегти</button>
+</form>
