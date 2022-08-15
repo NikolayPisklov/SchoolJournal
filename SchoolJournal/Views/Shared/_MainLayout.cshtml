@@ -22,7 +22,7 @@
         else if (Context.Session.GetString("Status") == "Admin")
         {
             <a class="me-3" style="color:#CAD2C5">Журнали</a>
-            <a class="me-3" style="color:#CAD2C5">Розклад</a>
+            <a asp-controller="Schedule" asp-action="ClassesSchedules" class="me-3" style="color:#CAD2C5">Розклад</a>
             <a class="me-3" style="color:#CAD2C5">Адміністрування</a>
         }
         else

@@ -8,7 +8,7 @@ namespace SchoolJournal.Controllers
     {
         private readonly SchoolJournalContext _db;
         private int _currentPage = 1;//To do: change to selecting page to datetime.now
-        public ScheduleController(SchoolJournalContext db) 
+        public ScheduleController(SchoolJournalContext db)
         {
             _db = db;
         }
@@ -21,13 +21,27 @@ namespace SchoolJournal.Controllers
             ViewBag.LessonTimes = _db.LessonTimes.OrderBy(lt => lt.StartTime.Length).ThenBy(lt => lt.StartTime).ToList();
             return View("Schedule", Paging<DateTime>.Create(schoolYearDays, pageNumber ?? _currentPage, 7));
         }
-        public IActionResult TeacherSchedule(int? pageNumber) 
+        public IActionResult TeacherSchedule(int? pageNumber)
         {
             User user = JsonSerializer.Deserialize<User>(HttpContext.Session.GetString("UserObject"));
             List<DateTime> schoolYearDays = GetSchoolYearDays();
             ViewBag.Content = GetScheduleContentForTeacher(user.Id);
             ViewBag.LessonTimes = _db.LessonTimes.OrderBy(lt => lt.StartTime.Length).ThenBy(lt => lt.StartTime).ToList();
             return View("Schedule", Paging<DateTime>.Create(schoolYearDays, pageNumber ?? _currentPage, 7));
+        }
+        public IActionResult AdminSchedule(int? pageNumber, int fkClass)
+        {
+            List<DateTime> schoolYearDays = GetSchoolYearDays();
+            ViewBag.Content = GetScheduleContentForStudent(fkClass);
+            ViewBag.LessonTimes = _db.LessonTimes.OrderBy(lt => lt.StartTime.Length).ThenBy(lt => lt.StartTime).ToList();
+            ViewBag.FkClass = fkClass;
+            return View("Schedule", Paging<DateTime>.Create(schoolYearDays, pageNumber ?? _currentPage, 7));
+        }
+        public IActionResult ClassesSchedules() 
+        {
+            List<Class> classes = _db.Classes.Where(c => c.ReleaseDate > DateTime.Now)
+                .OrderBy(c => c.Title.Length).ThenBy(c => c.Title).ToList();
+            return View(classes);
         }
         private List<ScheduleContent> GetScheduleContentForStudent(int fkClass) 
         {
