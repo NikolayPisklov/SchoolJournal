@@ -49,7 +49,8 @@
                             @currentContent.Subject.Title 
                             @if(status == "Admin" && day.Month > 8 || day.Month < 6)
                             {
-                                 <a asp-action="EditLesson" class="btn btn-light pt-0 pb-0 m-1 float-end">/</a>
+                                 <a asp-action="EditLesson" asp-route-fkJournal="@currentContent.Lesson.FkJournal" 
+                                    asp-route-lessonId="@currentContent.Lesson.Id" class="btn btn-light pt-0 pb-0 m-1 float-end">/</a>
                             }
                             <br/>
                             @currentContent.Class.Title<br/>

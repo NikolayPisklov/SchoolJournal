@@ -72,18 +72,33 @@ namespace SchoolJournal.Controllers
             }
         }
         [HttpGet]
-        public IActionResult EditLesson(Lesson lesson) 
+        public IActionResult EditLesson(int fkJournal, int lessonId) 
         {
-            int fkClass = _db.Journals.Where(j => j.Id == lesson.FkJournal).Select(j => j.FkClass).First(); 
+            int fkClass = _db.Journals.Where(j => j.Id == fkJournal).Select(j => j.FkClass).First(); 
             ViewBag.FkClass = fkClass;
             ViewBag.JournalsSelectList = GetJournalJournalsSelectList(fkClass);
+            Lesson lesson = _db.Lessons.Find(lessonId);
             return View(lesson);
         }
         [HttpPost]
-        public IActionResult EditLesson(int fkClass, Lesson lesson) 
+        public IActionResult EditLesson(int fkTime, int fkJournal, int fkClass, Lesson lesson) 
         {
+            if (ModelState.IsValid)
+            {
+                Journal journal = _db.Journals.Find(fkJournal);
+                lesson.FkJournalNavigation = _db.Journals.Find(fkJournal);
+                journal.Lessons.Add(lesson);
+                _db.Update(lesson);
+                _db.SaveChanges();
+                return RedirectToAction("AdminSchedule", new { _currentPage, fkClass });
 
-            return View();
+            }
+            else
+            {
+                ViewBag.FkClass = fkClass;
+                ViewBag.JournalsSelectList = GetJournalJournalsSelectList(fkClass);
+                return View();
+            }
         }
         private List<ScheduleContent> GetScheduleContentForStudent(int fkClass) 
         {
