@@ -36,9 +36,10 @@
                     if (currentContent == null)
                     {
                         <td style="height:75px" class="text-end p-0">
-                            @if (/*status == "Admin" &&*/ day.Month > 8 || day.Month < 6)
+                            @if (status == "Admin" && day.Month > 8 || day.Month < 6)
                             {
-                                <a asp-action="AddLesson" class="btn btn-light pt-0 pb-0 m-1">+</a>
+                                <a asp-action="AddLesson" asp-route-fkClass="@ViewBag.FkClass" asp-route-fkLessonTime="@time.Id"
+                                    asp-route-lessonDate="@day.Date" class="btn btn-light pt-0 pb-0 m-1">+</a>
                             }
                         </td>
                     }
@@ -46,7 +47,7 @@
                     {
                         <td class="p-0 ps-3 text-nowrap">
                             @currentContent.Subject.Title 
-                            @if(/*status == "Admin" &&*/ day.Month > 8 || day.Month < 6)
+                            @if(status == "Admin" && day.Month > 8 || day.Month < 6)
                             {
                                  <a asp-action="EditLesson" class="btn btn-light pt-0 pb-0 m-1 float-end">/</a>
                             }
