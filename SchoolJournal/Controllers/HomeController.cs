@@ -74,24 +74,6 @@ namespace SchoolJournal.Controllers
                 return View(journals);
             }
         }
-        public IActionResult Navigation()
-        {
-            User? user = JsonSerializer.Deserialize<User>(HttpContext.Session.GetString("UserObject"));
-            if (user == null)
-            {
-                return RedirectToAction("Authorization", "Authorization");
-            }
-            else
-            {
-                return RedirectToAction("Home", user);
-            }
-        }
-        public IActionResult RedirectToJournal(int journalId) 
-        {
-            Journal journal = _db.Journals.Where(j => j.Id == journalId).First();
-            SessionJson.SetObjectAsJson(HttpContext.Session, "Journal", journal);
-            return RedirectToAction("Journal", "Journal");
-        }
 
         private List<JournalListContent> GetJournalListContentForStudent(int classId) 
         {
