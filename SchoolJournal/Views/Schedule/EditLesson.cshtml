@@ -1,0 +1,36 @@
+﻿@model Lesson
+@{
+    Layout = "_MainLayout";
+    ViewBag.Title = "Додавання нового уроку";
+}
+<link rel="stylesheet" href="/css/formValidationStyle.css"/>
+
+<h4 class="text-center mt-3">Оберіть журнал</h4>
+<p class="fw-light text-center">*Тут відображаються тільки вже існуючі журнали для даного класу. 
+    <br />Якщо ви не знайшли потрібного журналу, то перейдіть <a>на сторінку додавання журналу</a>*</p>
+
+<form method="post">
+    @Html.HiddenFor(m => m.Id)
+    @Html.HiddenFor(m => m.FkLessonTime)
+    @Html.HiddenFor(m => m.Date)
+    @Html.HiddenFor(m => m.Theme)
+    @Html.HiddenFor(m => m.Homework)
+    <div class="row justify-content-center mb-2 mt-0"><span class="col-auto text-danger" asp-validation-for="FkJournal"></span></div>
+    <div class="row justify-content-center">
+        <div class="col-3">
+            @Html.DropDownListFor(m => m.FkJournal, ((SelectList)ViewBag.JournalsSelectList), "Оберіть журнал", 
+                    new { @class = "form-select text-center mr-3" })
+        </div>
+    </div>
+    <div class="row justify-content-center mt-3">
+        <div class="col-auto">
+            <input asp-route-fkClass="@ViewBag.FkClass" asp-route-fkJournal="@Model.FkJournal"
+                asp-route-fkTime="@Model.FkLessonTime" asp-action="EditLesson" 
+                type="submit" value="Зберегти зміни" class="btn" style="background-color: #2F3E46; color: #CAD2C5;"/>
+        </div>
+        <div class="col-auto">
+            <input asp-route-oldFkJournal="@ViewBag.OldFkJournal" asp-route-fkClass="@ViewBag.FkClass" 
+                asp-action="DeleteLesson" type="submit" value="Видалити урок" class="btn btn-danger"/>
+        </div>
+    </div>
+</form>

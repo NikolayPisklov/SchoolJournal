@@ -1,0 +1,109 @@
+﻿@model Paging<DateTime>
+@{
+    Layout = "_MainLayout";
+    ViewBag.Title = "Розклад";
+    List<LessonTime> lessonTimes = ViewBag.LessonTimes;
+    List<ScheduleContent> scheduleContent = ViewBag.Content;
+    string status = Context.Session.GetString("Status");
+}
+@{string month = CultureInfo.GetCultureInfo("uk-UA").DateTimeFormat.GetMonthName(Model[0].Month); }
+<h4 class="mt-3 mb-3 text-center" style="color: #112031">@char.ToUpper(month[0])@month.Substring(1) @Model[0].ToString("yyyy")</h4>
+<table class="table table-bordered">
+    <thead style="background-color:#cad2c5;" class="text-dark">
+        <tr>
+            <th style="width:7%"></th>
+            @foreach(DateTime day in Model)
+            {
+                <th class="text-center" style="width:13.3%">
+                    @day.Day<br />
+                    @{
+                        string dayName = CultureInfo.GetCultureInfo("uk-UA").DateTimeFormat.GetDayName(day.DayOfWeek);
+                    }
+                    @char.ToUpper(dayName[0])@dayName.Substring(1)
+                </th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(LessonTime time in lessonTimes)
+        {
+            <tr>
+                <td class="text-center align-middle">@time.StartTime-@time.EndTime</td>
+                @foreach (DateTime day in Model)
+                {
+                    ScheduleContent currentContent = scheduleContent.Where(sc => sc.Lesson.Date == day.Date 
+                        && sc.Lesson.FkLessonTime == time.Id).FirstOrDefault();
+                    if (currentContent == null)
+                    {
+                        if (day.DayOfWeek == DayOfWeek.Saturday || day.DayOfWeek == DayOfWeek.Sunday)
+                        {
+                            <td></td>
+                        }
+                        else
+                        {
+                           <td style="height:75px" class="text-end p-0">
+                                @if (status == "Admin" && day.Date > DateTime.Now.Date && (day.Month > 8 || day.Month < 6))
+                                {
+                                    <a asp-action="AddLesson" asp-route-fkClass="@ViewBag.FkClass" asp-route-fkLessonTime="@time.Id"
+                                        asp-route-lessonDate="@day.Date" class="btn btn-light pt-0 pb-0 m-1">+</a>
+                                }
+                            </td> 
+                        }                       
+                    }
+                    else
+                    {
+                        <td class="p-0 ps-3 text-nowrap">
+                            @currentContent.Subject.Title 
+                            @if(status == "Admin" && day.Date > DateTime.Now.Date && day.Month > 8 || day.Month < 6)
+                            {
+                                 <a asp-action="EditLesson" asp-route-fkJournal="@currentContent.Lesson.FkJournal" 
+                                    asp-route-lessonId="@currentContent.Lesson.Id" class="m-1">
+                                        <img class="rounded float-end m-1" style="width:25px; height:25px" src="~/img/pencil3.0.png" alt="Редагувати">
+                                    </a>
+                            }
+                            <br/>
+                            @currentContent.Class.Title<br/>
+                            @currentContent.Teacher.Surname @currentContent.Teacher.Name[0]. @currentContent.Teacher.Middlename[0].                           
+                        </td>
+                    }
+                }
+            </tr>
+        }
+    </tbody>
+</table>
+@{
+    var prevDisabled = !Model.HasPreviousPage ? "disabled" : "";
+    var nextDisabled = !Model.HasNextPage ? "disabled" : "";
+}
+<p>
+    @if(status == "Student")
+    {
+        <a asp-action="StudentSchedule"
+            asp-route-pageNumber="@(Model.PageIndex - 1)" 
+            class="btn btn-sm ms-3 mt-0 @prevDisabled" style="background-color: #2F3E46; color: #CAD2C5; ">Попередня сторінка</a>
+
+        <a asp-action="StudentSchedule"
+            asp-route-pageNumber="@(Model.PageIndex + 1)" 
+            class="btn btn-sm @nextDisabled" style="background-color: #2F3E46; color: #CAD2C5; ">Наступна сторінка</a>
+    }
+    else if(status == "Teacher")
+    {
+        <a asp-action="TeacherSchedule"
+            asp-route-pageNumber="@(Model.PageIndex - 1)" 
+            class="btn btn-sm ms-3 mt-0 @prevDisabled" style="background-color: #2F3E46; color: #CAD2C5; ">Попередня сторінка</a>
+
+        <a asp-action="TeacherSchedule"
+            asp-route-pageNumber="@(Model.PageIndex + 1)" 
+            class="btn btn-sm @nextDisabled" style="background-color: #2F3E46; color: #CAD2C5; ">Наступна сторінка</a>
+    }
+    else
+    {
+        <a asp-action="AdminSchedule"
+            asp-route-pageNumber="@(Model.PageIndex - 1)" asp-route-fkClass="@ViewBag.FkClass"
+            class="btn btn-sm ms-3 mt-0 @prevDisabled" style="background-color: #2F3E46; color: #CAD2C5; ">Попередня сторінка</a>
+
+        <a asp-action="AdminSchedule"
+            asp-route-pageNumber="@(Model.PageIndex + 1)" asp-route-fkClass="@ViewBag.FkClass"
+            class="btn btn-sm @nextDisabled" style="background-color: #2F3E46; color: #CAD2C5; ">Наступна сторінка</a>
+    }
+</p>  
