@@ -16,17 +16,17 @@ namespace SchoolJournal.Controllers
 
         public IActionResult StudentSchedule(int? pageNumber)
         {
-            User user = JsonSerializer.Deserialize<User>(HttpContext.Session.GetString("UserObject"));
+            int? fkClass = HttpContext.Session.GetInt32("FkClass");
             List<DateTime> schoolYearDays = GetSchoolYearDays();
-            ViewBag.Content = GetScheduleContentForStudent(user.FkClass);
+            ViewBag.Content = GetScheduleContentForStudent((int)fkClass);
             ViewBag.LessonTimes = _db.LessonTimes.OrderBy(lt => lt.StartTime.Length).ThenBy(lt => lt.StartTime).ToList();
             return View("Schedule", Paging<DateTime>.Create(schoolYearDays, pageNumber ?? GetCurrentPage(schoolYearDays), 7));
         }
         public IActionResult TeacherSchedule(int? pageNumber)
         {
-            User user = JsonSerializer.Deserialize<User>(HttpContext.Session.GetString("UserObject"));
+            int? teacherId = HttpContext.Session.GetInt32("TeacherId");
             List<DateTime> schoolYearDays = GetSchoolYearDays();
-            ViewBag.Content = GetScheduleContentForTeacher(user.Id);
+            ViewBag.Content = GetScheduleContentForTeacher((int)teacherId);
             ViewBag.LessonTimes = _db.LessonTimes.OrderBy(lt => lt.StartTime.Length).ThenBy(lt => lt.StartTime).ToList();
             return View("Schedule", Paging<DateTime>.Create(schoolYearDays, pageNumber ?? GetCurrentPage(schoolYearDays), 7));
         }
