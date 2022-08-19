@@ -30,11 +30,17 @@
                         && p.Progress.FkLesson == lesson.Id).FirstOrDefault();
                     @if (progress == null)
                     {
-                        <td class="p-1 h-100"><a class="btn btn-light w-100 h-100"></a></td>
+                        <td class="p-1 h-100">
+                            <a asp-action="AddProgress" asp-route-fkStudent="@student.Id" 
+                                asp-route-fkLesson="@lesson.Id" class="btn btn-light w-100 h-100"></a>
+                        </td>
                     }
                     else
                     {
-                        <td class="text-center p-1 h-100"><a class="btn btn-light w-100 h-100 p-1">@progress.Mark.Title</a></td>
+                        <td class="text-center p-1 h-100">
+                            <a asp-action="EditProgress" asp-route-progressId="@progress.Progress.Id"
+                                class="btn btn-light w-100 h-100 p-1">@progress.Mark.Title</a>
+                        </td>
                     }
             }
             </tr>

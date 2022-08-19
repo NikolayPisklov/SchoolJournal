@@ -1,0 +1,31 @@
+﻿@model Progress
+@{
+    Layout = "_MainLayout";
+    Student student = ViewBag.Student;
+    DateTime lessonDate = ViewBag.LessonDate;
+    ViewBag.Title = "Редагування оцінки";
+}
+<link rel="stylesheet" href="/css/formValidationStyle.css"/>
+
+<h5 class="text-center mt-3 mb-3">Редагування оцінки @student.Surname @student.Name @student.Middlename за @lessonDate.ToString("dd.MM.yyyy")</h5>
+
+<form method="post">
+    @Html.HiddenFor(m => m.Id)
+    @Html.HiddenFor(m => m.FkLesson)
+    @Html.HiddenFor(m => m.FkLessonNavigation)
+    @Html.HiddenFor(m => m.FkStudent)
+    @Html.HiddenFor(m => m.FkStudentNavigation)
+    @Html.HiddenFor(m => m.FkMarkNavigation)
+    <div class="row justify-content-center mb-2 mt-0"><span class="col-auto text-danger" asp-validation-for="FkMark"></span></div>
+    <div class="row justify-content-center">
+        <div class="col-auto">
+            @Html.DropDownListFor(m => m.FkMark, ((SelectList)ViewBag.MarksSelectedList), "Оберіть оцінку", 
+                        new { @class = "form-select text-center mr-3" })
+        </div>
+    </div>
+    <div class="row justify-content-center mt-3">
+        <div class="col-auto">
+            <input class="btn" style="background-color: #2F3E46; color: #CAD2C5;" type="submit" value="Зберегти оцінку"/>
+        </div>
+    </div>
+</form>

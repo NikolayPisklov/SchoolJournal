@@ -19,31 +19,24 @@ namespace SchoolJournal.Controllers
             _db = db;
         }
 
-
         [HttpGet]
-        public IActionResult Home(User user)
+        public IActionResult StudentHome(int fkClass) 
         {
-            if (HttpContext.Session.GetString("Status") == "Student")
-            {
-                List<JournalListContent> journals = GetJournalListContentForStudent(user.FkClass);
-                return View(journals);
-            }
-            else if (HttpContext.Session.GetString("Status") == "Teacher")
-            {
-                List<JournalListContent> journals = GetJournalListContentForTeacher(user.Id);
-                return View(journals);
-            }
-            else if (HttpContext.Session.GetString("Status") == "Admin")
-            {
-                List<JournalListContent> journals = GetJournalListContentForAdmin();
-                SetFiltersViewBags();
-                return View(journals);
-            }
-            else
-            {
-                ViewBag.Message = "Час вашої сесії вийшов! Просимо авторизуватись знову!";
-                return RedirectToAction("Authorization", "Authorization");
-            }
+            List<JournalListContent> journals = GetJournalListContentForStudent(fkClass);
+            return View("Home", journals);
+        }
+        [HttpGet]
+        public IActionResult TeacherHome(int teacherId) 
+        {
+            List<JournalListContent> journals = GetJournalListContentForTeacher(teacherId);
+            return View("Home", journals);
+        }
+        [HttpGet]
+        public IActionResult Home()
+        {
+            List<JournalListContent> journals = GetJournalListContentForAdmin();
+            SetFiltersViewBags();
+            return View(journals);
         }
         [HttpPost]
         public IActionResult Home(int? subjectId, int? classRangId)

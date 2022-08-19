@@ -26,19 +26,19 @@ namespace SchoolJournal.Controllers
             {
                 SetStudentProperties(user);
                 SetSessionVariablesForStudent(user);
-                return RedirectToAction("Home", "Home", user);
+                return RedirectToAction("StudentHome", "Home", new { fkClass = user.FkClass});
             }
             else if (IsTeacher(user))
             {
                 SetTeacherProperties(user);
                 SetSessionVariablesForTeacher(user);
-                return RedirectToAction("Home", "Home", user);
+                return RedirectToAction("TeacherHome", "Home", new { teacherId = user.Id });
             }
             else if (IsAdmin(user))
             {
                 SetAdminProperties(user);
                 SetSessionVariablesForAdmin(user);
-                return RedirectToAction("Home", "Home", user);
+                return RedirectToAction("Home", "Home");
             }
             else 
             {
@@ -86,17 +86,17 @@ namespace SchoolJournal.Controllers
         private void SetSessionVariablesForAdmin(User user) 
         {
             HttpContext.Session.SetString("Status", "Admin");
-            HttpContext.Session.SetString("UserObject", JsonSerializer.Serialize(user));
         }
         private void SetSessionVariablesForTeacher(User user) 
         {
             HttpContext.Session.SetString("Status", "Teacher");
-            HttpContext.Session.SetString("UserObject", JsonSerializer.Serialize(user));
+            HttpContext.Session.SetInt32("TeacherId", user.Id);
         }
         private void SetSessionVariablesForStudent(User user) 
         {
             HttpContext.Session.SetString("Status", "Student");
-            HttpContext.Session.SetString("UserObject", JsonSerializer.Serialize(user));
+            HttpContext.Session.SetInt32("StudentId", user.Id);
+            HttpContext.Session.SetInt32("FkClass", user.FkClass);
         }
         private void SetStudentProperties(User user) 
         {
