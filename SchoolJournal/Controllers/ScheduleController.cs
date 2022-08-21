@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using SchoolJournal.ViewModels;
-using System.Text.Json;
 
 namespace SchoolJournal.Controllers
 {
@@ -111,6 +110,7 @@ namespace SchoolJournal.Controllers
             _db.SaveChanges();
             return RedirectToRoute(new { action = "AdminSchedule", pageNumber = HttpContext.Session.GetInt32("schedulePage"), fkClass });
         }
+
         private List<ScheduleContent> GetScheduleContentForStudent(int fkClass) 
         {
             return (from j in _db.Journals

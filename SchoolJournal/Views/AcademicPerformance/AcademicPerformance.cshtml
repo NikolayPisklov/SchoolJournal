@@ -1,0 +1,40 @@
+﻿@{
+    Layout = "_MainLayout";
+    ViewBag.Title = $"Успішність з {ViewBag.SubjectTitle}";
+}
+<h4 class="mt-3 mb-3 text-center">Успішність з предмету @ViewBag.SubjectTitle</h4>
+<div class="row justify-content-center">
+    <div class="col-4">
+        <table class="table">
+            <tr>
+                <td>Кількість оцінок високого рівня</td>
+                <td>@ViewBag.High</td>
+            </tr>
+            <tr>
+                <td>Кількість оцінок достатнього рівня</td>
+                <td>@ViewBag.Middle</td>
+            </tr>
+            <tr>
+                <td>Кількість оцінок середнього рівня</td>
+                <td>@ViewBag.SemiMiddle</td>
+            </tr>
+            <tr>
+                <td>Кількість оцінок початкового рівня</td>
+                <td>@ViewBag.Low</td>
+            </tr>
+            <tr>
+                <td>Середній бал</td>
+                <td>@Math.Round(ViewBag.Avg, 2)</td>
+            </tr>
+            <tr>
+                <td>Кількість пропущених занять</td>
+                <td>@ViewBag.Eps</td>
+            </tr>
+            <tr>
+                <td>Кількість пропущених занять з поважної причини</td>
+                <td>@ViewBag.Pp</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
