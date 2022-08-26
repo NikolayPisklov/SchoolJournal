@@ -102,7 +102,7 @@ namespace SchoolJournal.Controllers
         {
             Student student = _db.Students.Where(s => s.Login == user.Login).First();
             user.Id = student.Id;
-            user.FkClass = student.FkClass;
+            user.FkClass = (int)student.FkClass;
             user.ParrentEmail = student.ParrentEmail;
             user.Surname = student.Surname;
             user.Name = student.Name;

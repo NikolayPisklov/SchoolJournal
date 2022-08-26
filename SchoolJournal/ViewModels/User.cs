@@ -10,7 +10,7 @@
         public string Name { get; set; } = null!;
         public string Surname { get; set; } = null!;
         public string Middlename { get; set; } = null!;
-        public DateTime HireDate { get; set; }
+        public DateTime? HireDate { get; set; }
         public DateTime? FireDate { get; set; }
     }
 }

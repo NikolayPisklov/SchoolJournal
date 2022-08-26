@@ -4,29 +4,31 @@
     <meta name="viewport" content="width=device-width" />
     <title>@ViewBag.Title</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="/css/formValidationStyle.css"/>
+    <link rel="stylesheet" type="text/css" href="/css/school.css"/>
 </head>
 <body>
-    <div class="text-center" style="background-color:#354F52; height: 120px">
-        <h1 class="pt-3" style="color:#CAD2C5">School Journal</h1>
+    <div class="bg-dark text-center" style="height: 120px">
+        <h1 class="pt-3 text-secondary">School Journal</h1>
         @if (Context.Session.GetString("Status") == "Student")
         {
             <a asp-controller="Home" asp-action="StudentHome"
-                asp-route-fkClass="@Context.Session.GetInt32("StudentId")" class="me-3" style="color:#CAD2C5">Журнали</a>
-            <a asp-controller="Schedule" asp-action="StudentSchedule" class="me-3" style="color:#CAD2C5">Розклад</a>
+                asp-route-fkClass="@Context.Session.GetInt32("StudentId")" class="me-3 text-secondary">Журнали</a>
+            <a asp-controller="Schedule" asp-action="StudentSchedule" class="me-3 text-secondary">Розклад</a>
             <a asp-controller="AcademicPerformance" asp-action="SubjectsList" 
-                asp-route-fkClass="@Context.Session.GetInt32("FkClass")" class="me-3" style="color:#CAD2C5">Успішність</a>
+                asp-route-fkClass="@Context.Session.GetInt32("FkClass")" class="me-3 text-secondary">Успішність</a>
         }
         else if (Context.Session.GetString("Status") == "Teacher")
         {
             <a asp-controller="Home" asp-action="TeacherHome"
-                asp-route-teacherId="@Context.Session.GetInt32("TeacherId")"class="me-3" style="color:#CAD2C5">Журнали</a>
-            <a asp-controller="Schedule" asp-action="TeacherSchedule" class="me-3" style="color:#CAD2C5">Розклад</a>
+                asp-route-teacherId="@Context.Session.GetInt32("TeacherId")"class="me-3 text-secondary">Журнали</a>
+            <a asp-controller="Schedule" asp-action="TeacherSchedule" class="me-3 text-secondary">Розклад</a>
         }
         else if (Context.Session.GetString("Status") == "Admin")
         {
-            <a asp-controller="Home" asp-action="Home" class="me-3" style="color:#CAD2C5">Журнали</a>
-            <a asp-controller="Schedule" asp-action="ClassesSchedules" class="me-3" style="color:#CAD2C5">Розклад</a>
-            <a class="me-3" style="color:#CAD2C5">Адміністрування</a>
+            <a asp-controller="Home" asp-action="Home" class="me-3 text-secondary">Журнали</a>
+            <a asp-controller="Schedule" asp-action="ClassesSchedules" class="me-3 text-secondary">Розклад</a>
+            <a asp-controller="Administration" asp-action="Home" class="me-3 text-secondary">Адміністрування</a>
         }
         else
         {

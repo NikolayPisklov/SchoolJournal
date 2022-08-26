@@ -1,0 +1,129 @@
+﻿@model Teacher
+@{
+    Layout = "_MainLayout";
+    ViewBag.Title = "Редагування вчителя";
+}
+@if(ViewBag.IsEdit == false)
+{
+    <h3 class="ms-3 mt-3 mb-3">Введіть дані нового вчителя</h3>
+}
+else
+{
+    <h3 class="ms-3 mt-3">Відредагуйте вчителя</h3>    
+}
+@if (ViewBag.Success != null)
+{
+    <span class="text-success ms-3">@ViewBag.Success</span>
+}
+else
+{
+    
+}
+<form method="post" class="ms-3">
+    @Html.HiddenFor(m => m.Id)
+    @Html.HiddenFor(m => m.FireDate)
+    @if(ViewBag.Login!=null)
+    {
+        <div class="row mb-2 mt-0">
+            <span class="col-auto text-danger">@ViewBag.Login</span>
+        </div>
+        <div class="row">
+            <div class="col-1">
+                <label asp-for="Login" class="fs-6">Логін:</label>
+            </div>
+            <div class="col-4">
+                <input asp-for="Login" class="form-control form-control-sm input-validation-error"/>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row mb-2 mt-0">
+            <span class="col-auto text-danger" asp-validation-for="Login"></span>
+        </div>
+        <div class="row">
+            <div class="col-1">
+                <label asp-for="Login" class="fs-6">Логін:</label>
+            </div>
+            <div class="col-4">
+                <input asp-for="Login" class="form-control form-control-sm"/>
+            </div>
+        </div>
+    }
+
+    <div class="row mb-2 mt-0">
+        <span class="col-auto text-danger" asp-validation-for="Password"></span>
+    </div>
+    <div class="row">
+        <div class="col-1">
+            <label asp-for="Password" class="fs-6">Пароль:</label>
+        </div>
+        <div class="col-4">
+            <input asp-for="Password" class="form-control form-control-sm"/>
+        </div>
+    </div>
+
+    <div class="row mb-2 mt-0">
+        <span class="col-auto text-danger" asp-validation-for="Name"></span>
+    </div>
+    <div class="row">
+        <div class="col-1">
+            <label asp-for="Name" class="fs-6">Ім'я:</label>
+        </div>
+        <div class="col-4">
+            <input asp-for="Name" class="form-control form-control-sm"/>
+        </div>
+    </div>
+
+    <div class="row mb-2 mt-0">
+        <span class="col-auto text-danger" asp-validation-for="Surname"></span>
+    </div>
+    <div class="row">
+        <div class="col-1">
+            <label asp-for="Surname" class="fs-6">Прізвище:</label>
+        </div>
+        <div class="col-4">
+            <input asp-for="Surname" class="form-control form-control-sm"/>
+        </div>
+    </div>
+
+    <div class="row mb-2 mt-0">
+        <span class="col-auto text-danger" asp-validation-for="Middlename"></span>
+    </div>
+    <div class="row">
+        <div class="col-1">
+            <label asp-for="Middlename" class="fs-6">По-батькові:</label>
+        </div>
+        <div class="col-4">
+            <input asp-for="Middlename" class="form-control form-control-sm"/>
+        </div>
+    </div>
+
+    <div class="row mb-2 mt-0">
+        <span class="col-auto text-danger" asp-validation-for="HireDate"></span>
+    </div>
+    <div class="row">
+        <div class="col-1">
+            <label asp-for="HireDate" class="fs-6">Дата найму:</label>
+        </div>
+        <div class="col-auto">
+            <input asp-for="HireDate" type="date" class="form-control form-control-sm"/>
+        </div>
+    </div>
+
+    @if(ViewBag.IsEdit == false)
+    {
+       <div class="row mt-3">
+            <button asp-action="AddTeacher" type="submit" class="btn btn-primary col-auto me-3">Додати вчителя</button>
+            <a asp-action="TeacherList" class="btn btn-success col-auto">Повернутись до списку вчителів</a>
+        </div>
+    }
+    else
+    {
+        <div class="row mt-3">
+            <button asp-action="EditTeacher" type="submit" class="btn btn-primary col-auto me-3">Зберегти зміни</button>
+            <a asp-action="TeacherList" class="btn btn-success col-auto">Повернутись до списку вчителів</a>
+        </div>
+    }
+
+</form>

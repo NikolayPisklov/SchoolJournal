@@ -1,0 +1,46 @@
+﻿@model SearchString
+@{
+    Layout = "_MainLayout";
+    ViewBag.Title = "Редагування вчителів";
+    IEnumerable<Teacher> teachers = ViewBag.Teachers;
+}
+<h4 class="text-center mt-3 mb-3">Список вчителів</h4>
+<form method="post" class="row mb-3 ms-3 mt-3">
+    <div class="col-auto">
+        <span class="fs-6">Пошук зa ім'ям:</span>
+    </div>
+    <div class="col-4">
+        <input asp-for="SearchValue" type="text" class="form-control form-control-sm"/>
+    </div> 
+    <div class="col-auto">
+         <input class="rounded align-middle" 
+            type="image" src="~/img/search.png" alt="Пошук" width="30px" height="30px"/>
+    </div>
+    <div class="col-auto">
+        <a asp-action="AddTeacher" class="btn btn-sm btn-success">+ Додати вчителя</a>
+    </div>
+</form>  
+@if(ViewBag.Message != null)
+{
+    <p class="text-danger mb-3 ms-4">@ViewBag.Message</p>
+}
+<table class="table">
+    <tr class="text-dark fw-bold bg-light">
+        <td class="ps-5">Логін</td>
+        <td>Пароль</td>
+        <td>ПІБ</td>
+        <td>Дата найму</td>
+        <td></td>
+    </tr>
+
+    @foreach(Teacher t in teachers)
+    {
+        <tr>
+            <td class="ps-5">@t.Login</td>
+            <td>@t.Password</td>
+            <td>@t.Surname @t.Name @t.Middlename</td>
+            <td>@Convert.ToDateTime(t.HireDate).ToString("dd.MM.yyyy")</td>
+            <td><a asp-action="EditTeacher" asp-route-teacherId="@t.Id" class="btn btn-sm btn-primary">Редагувати</a></td>
+        </tr>
+    }
+</table>
