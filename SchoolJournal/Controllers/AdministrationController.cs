@@ -19,6 +19,8 @@ namespace SchoolJournal.Controllers
         {
             return View();
         }
+
+
         [HttpGet]
         public IActionResult TeacherList()
         {
@@ -114,9 +116,12 @@ namespace SchoolJournal.Controllers
                 }
             }
         }
+
+
         public IActionResult StudentsList()
         {
-            List<StudentContent> students = GetStudentsList();
+            List<Student> students = _db.Students.Where(s => s.FkClassNavigation.ReleaseDate >= DateTime.Now)
+                .OrderBy(s => s.Surname).ToList();
             ViewBag.Students = students;
             return View();
         }
@@ -125,8 +130,10 @@ namespace SchoolJournal.Controllers
         {
             if (!string.IsNullOrEmpty(searchString.SearchValue))
             {
-                List<Student> students = _db.Students.FullTextSearchQuery(searchString.SearchValue).ToList();
-                ViewBag.Students = GetStudentsList(students);
+                ViewBag.Students = _db.Students.Where(s => s.FkClassNavigation.ReleaseDate >= DateTime.Now)
+                    .OrderBy(s => s.Surname)
+                    .FullTextSearchQuery(searchString.SearchValue).ToList();
+                List<Student> students = ViewBag.Students;
                 if (students.Count() == 0)
                 {
                     ViewBag.Message = $"За запитом '{searchString.SearchValue}' нічого не знайдено!";
@@ -139,7 +146,8 @@ namespace SchoolJournal.Controllers
             }
             else
             {
-                var students = GetStudentsList();
+                var students = _db.Students.Where(s => s.FkClassNavigation.ReleaseDate >= DateTime.Now)
+                    .OrderBy(s => s.Surname).ToList();
                 ViewBag.Students = students;
                 return View(searchString);
             }
@@ -152,29 +160,27 @@ namespace SchoolJournal.Controllers
             return View("Student");
         }
         [HttpPost]
-        public IActionResult AddStudent(Student newStudent) 
+        public IActionResult AddStudent(Student newStudent)
         {
             ViewBag.IsEdit = false;
             ViewBag.ClassesSelectList = GetClassSelectList();
-            newStudent.FkClassNavigation = _db.Classes.Where(c => c.Id == newStudent.FkClass).First();
+            ModelState.Remove("FkClassNavigation");
+            ModelState.Remove("Id");
             if (IsLoginExist(newStudent.Login))
             {
                 ViewBag.Login = "Такий логін вже існує!";
                 return View("Student");
             }
+            if (ModelState.IsValid)
+            {
+                _db.Add(newStudent);
+                _db.SaveChanges();
+                ViewBag.Success = "Ви вдало додали учня!";
+                return View("Student");
+            }
             else
             {
-                if (ModelState.IsValid)
-                {
-                    _db.Add(newStudent);
-                    _db.SaveChanges();
-                    ViewBag.Success = "Ви вдало додали учня!";
-                    return View("Student");
-                }
-                else
-                {
-                    return View("Student");
-                }
+                return View("Student");
             }
         }
         [HttpGet]
@@ -186,33 +192,33 @@ namespace SchoolJournal.Controllers
             return View("Student", student);
         }
         [HttpPost]
-        public IActionResult EditStudent(Student student) 
+        public IActionResult EditStudent(Student student)
         {
             ViewBag.IsEdit = true;
             ViewBag.ClassesSelectList = GetClassSelectList();
-            if (IsLoginExist(student.Login))
+            string oldLogin = _db.Students.Where(s => s.Id == student.Id).Select(s => s.Login).First();
+            ModelState.Remove("FkClassNavigation");
+            if (IsLoginExist(student.Login) && (student.Login != oldLogin))
             {
                 ViewBag.Login = "Такий логін вже існує!";
                 return View("Student");
             }
+            if (ModelState.IsValid)
+            {
+                _db.ChangeTracker.Clear();
+                _db.Update(student);
+                _db.SaveChanges();
+                ViewBag.Success = "Ви вдало відредагували учня!";
+                return View("Student");
+            }
             else
             {
-                if (ModelState.IsValid)
-                {
-                    _db.Update(student);
-                    _db.SaveChanges();
-                    ViewBag.Success = "Ви вдало відредагували учня!";
-                    return View("Student");
-                }
-                else
-                {
-                    return View("Student");
-                }
+                return View("Student");
             }
         }
 
 
-        private bool IsLoginExist(string login) 
+        private bool IsLoginExist(string login)
         {
             var student = _db.Students.Where(s => s.Login == login).FirstOrDefault();
             var teacher = _db.Teachers.Where(t => t.Login == login).FirstOrDefault();
@@ -221,31 +227,15 @@ namespace SchoolJournal.Controllers
             {
                 return false;
             }
-            else 
+            else
             {
                 return true;
             }
         }
-        private List<StudentContent> GetStudentsList() 
-        {
-            return (from s in _db.Students
-                    join c in _db.Classes on s.FkClass equals c.Id
-                    where c.ReleaseDate > DateTime.Now
-                    orderby s.Surname
-                    select new StudentContent { Student = s, Class = c }).ToList();
-        }
-        private List<StudentContent> GetStudentsList(List<Student> students)
-        {
-            return (from s in students
-                    join c in _db.Classes on s.FkClass equals c.Id
-                    where c.ReleaseDate > DateTime.Now
-                    orderby s.Surname
-                    select new StudentContent { Student = s, Class = c }).ToList();
-        }
-        private SelectList GetClassSelectList() 
+        private SelectList GetClassSelectList()
         {
             Dictionary<int, string> classesDict = new Dictionary<int, string>();
-            List<Class> classes = _db.Classes.Where(c => c.ReleaseDate > DateTime.Now).ToList(); 
+            List<Class> classes = _db.Classes.Where(c => c.ReleaseDate > DateTime.Now).ToList();
             foreach (Class c in classes)
             {
                 classesDict.Add(c.Id, c.Title);

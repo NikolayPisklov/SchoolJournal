@@ -28,7 +28,7 @@ namespace SchoolJournal.Models
         [Required(ErrorMessage = "Будь ласка, введіть по-батькові учня!")]
         public string Middlename { get; set; } = null!;
 
-        public virtual Class? FkClassNavigation { get; set; }
+        public virtual Class FkClassNavigation { get; set; }
         public virtual ICollection<Progress> Progresses { get; set; }
     }
 }

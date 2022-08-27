@@ -2,7 +2,7 @@
 @{
     Layout = "_MainLayout";
     ViewBag.Title = "Редагування учнів";
-    List<StudentContent> students = ViewBag.Students;
+    List<Student> students = ViewBag.Students;
 }
 <h4 class="text-center mt-3 mb-3">Список учнів</h4>
 <form method="post" class="row mb-3 ms-3 mt-3">
@@ -34,15 +34,15 @@
         <td></td>
     </tr>
 
-    @foreach(StudentContent s in students)
+    @foreach(Student s in students)
     {
         <tr>
-            <td class="ps-5">@s.Student.Login</td>
-            <td>@s.Student.Password</td>
-            <td>@s.Student.Surname @s.Student.Name @s.Student.Middlename</td>
-            <td>@s.Class.Title</td>
-            <td>@s.Student.ParrentEmail</td>
-            <td><a asp-action="EditStudent" asp-route-studentId="@s.Student.Id" 
+            <td>@s.Login</td>
+            <td>@s.Password</td>
+            <td>@s.Surname @s.Name @s.Middlename</td>
+            <td>@s.FkClassNavigation.Title</td>
+            <td>@s.ParrentEmail</td>
+            <td><a asp-action="EditStudent" asp-route-studentId="@s.Id" 
                     class="btn btn-sm btn-primary">Редагувати</a></td>
         </tr>
     }
