@@ -4,16 +4,21 @@
     ViewBag.Title = "Список предметів";
 }
 <h4 class="mt-3 mb-3 text-center">Оберіть предмет для перегляду успішності</h4>
-<table class="table table-striped">
-    @foreach(AcademicPerformanceContent c in Model)
-    {
-        <tr class="text-center">
-            <td>@c.Subject.Title</td>
-            <td>
-                <a asp-action="AcademicPerformance" asp-route-fkJournal="@c.Journal.Id" 
-                    asp-route-fkStudent="@Context.Session.GetInt32("StudentId")"
-                    class="btn btn-sm" style="background-color:#2F3E46; color:#CAD2C5">Переглянути</a>
-            </td>
-        </tr>
-    }
-</table>
+<div class="row justify-content-center">
+    <div class="col-auto">
+        <table class="table">
+            @foreach(AcademicPerformanceContent c in Model)
+            {
+                <tr>
+                    <td>@c.Subject.Title</td>
+                    <td>
+                        <a asp-action="AcademicPerformance" asp-route-fkJournal="@c.Journal.Id" 
+                            asp-route-fkStudent="@Context.Session.GetInt32("StudentId")"
+                            class="btn btn-sm btn-primary">Переглянути</a>
+                    </td>
+                </tr>
+            }
+        </table>
+    </div>
+</div>
+

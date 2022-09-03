@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿//To do: refactor to database changes
+/*using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SchoolJournal.ViewModels;
 
@@ -66,3 +67,4 @@ namespace SchoolJournal.Controllers
         }
     }
 }
+*/

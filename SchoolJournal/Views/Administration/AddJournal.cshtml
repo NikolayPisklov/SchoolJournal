@@ -1,0 +1,123 @@
+﻿@model Journal
+@{
+    Layout = "_MainLayout";
+    ViewBag.Title = "Створення журналу";
+    var classes = ViewBag.Classes;
+    var subjects = ViewBag.Subjects;
+    var teachers = ViewBag.Teachers;
+    var teacher = ViewBag.Teacher;
+    var subject = ViewBag.Subject;
+    var clas = ViewBag.Class;
+    SchoolYear year = ViewBag.SchoolYear;
+}
+@if(ViewBag.ClassSelect == true)
+{
+    <h3 class="text-center mt-3 mb-3">Оберіть клас</h3>
+    <div class="row justify-content-center">
+        <div class="col-auto">
+            <table class="table">
+                @foreach(Class c in classes)
+                {
+                    <tr>
+                        <td>@c.Title</td>
+                        <form method="post">
+                            @Html.HiddenFor(m => m.FkSchoolYear)
+                            <td>
+                                <input asp-action="AddJournalSubjectSelect" asp-route-classId="@c.Id"
+                                    type="submit" value="Обрати клас" class="btn btn-sm btn-primary"/>
+                            </td>
+                        </form>
+                        
+                    </tr>
+                }
+        </table>
+        </div>
+    </div>
+    
+}
+@if(ViewBag.SubjectSelect == true)
+{
+    <h3 class="text-center mt-3 mb-3">Оберіть предмет</h3>
+    <div class="row justify-content-center">
+        <div class="col-auto">
+            <table class="table">
+                @foreach(Subject s in subjects)
+                {
+                    <tr>
+                        <td>@s.Title</td>
+                        <form method="post">
+                            @Html.HiddenFor(m => m.FkSchoolYear)
+                            @Html.HiddenFor(m => m.FkClass)
+                            <td>
+                                <input asp-action="AddJournalTeacherSelect" asp-route-subjectId="@s.Id"
+                                    type="submit" value="Обрати предмет" class="btn btn-sm btn-primary"/>
+                            </td>
+                        </form>
+                        
+                    </tr>
+                }
+        </table>
+        </div>
+    </div>
+}
+@if(ViewBag.TeacherSelect == true)
+{
+    <h3 class="text-center mt-3 mb-3">Оберіть вчителя</h3>
+    <div class="row justify-content-center">
+        <div class="col-auto">
+            <table class="table">
+                @foreach(Teacher t in teachers)
+                {
+                    <tr>
+                        <td>@t.Surname @t.Name[0]. @t.Middlename[0].</td>
+                        <form method="post">
+                            @Html.HiddenFor(m => m.FkSchoolYear)
+                            @Html.HiddenFor(m => m.FkClass)
+                            <td>
+                                <input asp-action="AddJournalPreview" asp-route-teacherId="@t.Id"
+                                    asp-route-subjectId="@ViewBag.FkSubject"
+                                    type="submit" value="Обрати вчителя" class="btn btn-sm btn-primary"/>
+                            </td>
+                        </form>
+                        
+                    </tr>
+                }
+        </table>
+        </div>
+    </div>
+}
+@if(ViewBag.Preview == true)
+{
+    <h3 class="text-center mt-3 mb-3">Передперегляд журналу</h3>
+    @if (ViewBag.Message != null)
+    {
+        <p class="text-center text-danger">@ViewBag.Message</p>        
+    }
+    <p class="text-center">
+        Клас - @clas.Title<br/>
+        Предмет - @subject.Title<br/>
+        Вчитель - @teacher.Surname @teacher.Name @teacher.Middlename<br/>
+        @year.StartDate.Year - @year.EndDate.Year
+    </p>
+    <div class="row justify-content-center">
+        <div class="col-auto">
+            <a asp-action="AddJournalClassSelect" 
+                class="btn btn-success">Пройти форму для додавання ще раз</a>
+            </div>
+            @if (ViewBag.Message != null)
+            {
+                <input  type="submit" class="btn btn-primary" value="Зберегти журнал" disabled/>
+            }
+            else
+            {
+                <form method="post" class="col-auto">
+                    @Html.HiddenFor(m => m.FkSchoolYear)
+                    @Html.HiddenFor(m => m.FkClass)
+                    @Html.HiddenFor(m => m.FkTeacherSubject)
+                    <input asp-action="AddJournalSave" type="submit" class="btn btn-primary" value="Зберегти журнал"/>
+                </form>
+            }
+            
+        
+    </div>
+}

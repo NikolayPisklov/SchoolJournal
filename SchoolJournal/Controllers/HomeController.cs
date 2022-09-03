@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿//To do: refactor to database changes
+/*using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SchoolJournal.Models;
 using SchoolJournal.ViewModels;
@@ -123,9 +124,9 @@ namespace SchoolJournal.Controllers
         }
         private void SetFiltersViewBags() 
         {
-            HomePageFilters filters = new HomePageFilters(_db.Subjects.ToList());
+            JournalsFilter filters = new JournalsFilter(_db.Subjects.ToList(), _db.ClassRanks.ToList());
             ViewBag.SubjectsSelectList = filters.GetSubjectsSelectList();
             ViewBag.ClassRanksSelectList = filters.GetClassRangsSelecteList();
         }
     }
-}
+}*/

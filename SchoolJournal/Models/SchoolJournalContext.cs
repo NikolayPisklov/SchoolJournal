@@ -18,6 +18,7 @@ namespace SchoolJournal.Models
 
         public virtual DbSet<Administrator> Administrators { get; set; } = null!;
         public virtual DbSet<Class> Classes { get; set; } = null!;
+        public virtual DbSet<ClassRank> ClassRanks { get; set; } = null!;
         public virtual DbSet<Journal> Journals { get; set; } = null!;
         public virtual DbSet<Lesson> Lessons { get; set; } = null!;
         public virtual DbSet<LessonTime> LessonTimes { get; set; } = null!;
@@ -27,15 +28,7 @@ namespace SchoolJournal.Models
         public virtual DbSet<Student> Students { get; set; } = null!;
         public virtual DbSet<Subject> Subjects { get; set; } = null!;
         public virtual DbSet<Teacher> Teachers { get; set; } = null!;
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            if (!optionsBuilder.IsConfigured)
-            {
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-                optionsBuilder.UseSqlServer("Server=DESKTOP-5G7ENAA; Database=SchoolJournal; User Id=nikolaypisklov; Password=nikolaypisklov; Trusted_Connection=true;");
-            }
-        }
+        public virtual DbSet<TeacherSubject> TeacherSubjects { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -50,23 +43,23 @@ namespace SchoolJournal.Models
                 entity.Property(e => e.HireDate).HasColumnType("date");
 
                 entity.Property(e => e.Login)
-                    .HasMaxLength(100)
+                    .HasMaxLength(255)
                     .IsUnicode(false);
 
                 entity.Property(e => e.Middlename)
-                    .HasMaxLength(100)
+                    .HasMaxLength(255)
                     .IsUnicode(false);
 
                 entity.Property(e => e.Name)
-                    .HasMaxLength(100)
+                    .HasMaxLength(255)
                     .IsUnicode(false);
 
                 entity.Property(e => e.Password)
-                    .HasMaxLength(100)
+                    .HasMaxLength(255)
                     .IsUnicode(false);
 
                 entity.Property(e => e.Surname)
-                    .HasMaxLength(100)
+                    .HasMaxLength(255)
                     .IsUnicode(false);
             });
 
@@ -74,12 +67,29 @@ namespace SchoolJournal.Models
             {
                 entity.ToTable("Class");
 
-                entity.Property(e => e.RecruitmentDate).HasColumnType("datetime");
+                entity.Property(e => e.FkClassRank).HasColumnName("FK_ClassRank");
 
-                entity.Property(e => e.ReleaseDate).HasColumnType("datetime");
+                entity.Property(e => e.RecruitmentDate).HasColumnType("date");
+
+                entity.Property(e => e.ReleaseDate).HasColumnType("date");
 
                 entity.Property(e => e.Title)
-                    .HasMaxLength(4)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.HasOne(d => d.FkClassRankNavigation)
+                    .WithMany(p => p.Classes)
+                    .HasForeignKey(d => d.FkClassRank)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Rank_Class");
+            });
+
+            modelBuilder.Entity<ClassRank>(entity =>
+            {
+                entity.ToTable("ClassRank");
+
+                entity.Property(e => e.Title)
+                    .HasMaxLength(100)
                     .IsUnicode(false);
             });
 
@@ -91,9 +101,7 @@ namespace SchoolJournal.Models
 
                 entity.Property(e => e.FkSchoolYear).HasColumnName("FK_SchoolYear");
 
-                entity.Property(e => e.FkSubject).HasColumnName("FK_Subject");
-
-                entity.Property(e => e.FkTeacher).HasColumnName("FK_Teacher");
+                entity.Property(e => e.FkTeacherSubject).HasColumnName("FK_Teacher_Subject");
 
                 entity.HasOne(d => d.FkClassNavigation)
                     .WithMany(p => p.Journals)
@@ -107,17 +115,11 @@ namespace SchoolJournal.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_SchoolYear_Journal");
 
-                entity.HasOne(d => d.FkSubjectNavigation)
+                entity.HasOne(d => d.FkTeacherSubjectNavigation)
                     .WithMany(p => p.Journals)
-                    .HasForeignKey(d => d.FkSubject)
+                    .HasForeignKey(d => d.FkTeacherSubject)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_Subject_Journal");
-
-                entity.HasOne(d => d.FkTeacherNavigation)
-                    .WithMany(p => p.Journals)
-                    .HasForeignKey(d => d.FkTeacher)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_Teacher_Journal");
+                    .HasConstraintName("FK_TS_Journal");
             });
 
             modelBuilder.Entity<Lesson>(entity =>
@@ -131,14 +133,14 @@ namespace SchoolJournal.Models
                 entity.Property(e => e.FkLessonTime).HasColumnName("FK_LessonTime");
 
                 entity.Property(e => e.Homework)
-                    .HasMaxLength(200)
+                    .HasMaxLength(255)
                     .IsUnicode(false)
-                    .HasDefaultValueSql("(' ')");
+                    .HasDefaultValueSql("('')");
 
                 entity.Property(e => e.Theme)
-                    .HasMaxLength(100)
+                    .HasMaxLength(255)
                     .IsUnicode(false)
-                    .HasDefaultValueSql("(' ')");
+                    .HasDefaultValueSql("('')");
 
                 entity.HasOne(d => d.FkJournalNavigation)
                     .WithMany(p => p.Lessons)
@@ -171,7 +173,7 @@ namespace SchoolJournal.Models
                 entity.ToTable("Mark");
 
                 entity.Property(e => e.Title)
-                    .HasMaxLength(5)
+                    .HasMaxLength(50)
                     .IsUnicode(false);
             });
 
@@ -217,30 +219,33 @@ namespace SchoolJournal.Models
             {
                 entity.ToTable("Student");
 
+                entity.HasIndex(e => e.Login, "UQ__Student__5E55825B2FD56674")
+                    .IsUnique();
+
                 entity.Property(e => e.FkClass).HasColumnName("FK_Class");
 
                 entity.Property(e => e.Login)
-                    .HasMaxLength(100)
+                    .HasMaxLength(255)
                     .IsUnicode(false);
 
                 entity.Property(e => e.Middlename)
-                    .HasMaxLength(100)
+                    .HasMaxLength(255)
                     .IsUnicode(false);
 
                 entity.Property(e => e.Name)
-                    .HasMaxLength(100)
+                    .HasMaxLength(255)
                     .IsUnicode(false);
 
                 entity.Property(e => e.ParrentEmail)
-                    .HasMaxLength(150)
+                    .HasMaxLength(255)
                     .IsUnicode(false);
 
                 entity.Property(e => e.Password)
-                    .HasMaxLength(100)
+                    .HasMaxLength(255)
                     .IsUnicode(false);
 
                 entity.Property(e => e.Surname)
-                    .HasMaxLength(100)
+                    .HasMaxLength(255)
                     .IsUnicode(false);
 
                 entity.HasOne(d => d.FkClassNavigation)
@@ -255,7 +260,7 @@ namespace SchoolJournal.Models
                 entity.ToTable("Subject");
 
                 entity.Property(e => e.Title)
-                    .HasMaxLength(100)
+                    .HasMaxLength(255)
                     .IsUnicode(false);
             });
 
@@ -263,29 +268,53 @@ namespace SchoolJournal.Models
             {
                 entity.ToTable("Teacher");
 
+                entity.HasIndex(e => e.Login, "UQ__Teacher__5E55825BFF248B83")
+                    .IsUnique();
+
                 entity.Property(e => e.FireDate).HasColumnType("date");
 
                 entity.Property(e => e.HireDate).HasColumnType("date");
 
                 entity.Property(e => e.Login)
-                    .HasMaxLength(100)
+                    .HasMaxLength(255)
                     .IsUnicode(false);
 
                 entity.Property(e => e.Middlename)
-                    .HasMaxLength(100)
+                    .HasMaxLength(255)
                     .IsUnicode(false);
 
                 entity.Property(e => e.Name)
-                    .HasMaxLength(100)
+                    .HasMaxLength(255)
                     .IsUnicode(false);
 
                 entity.Property(e => e.Password)
-                    .HasMaxLength(100)
+                    .HasMaxLength(255)
                     .IsUnicode(false);
 
                 entity.Property(e => e.Surname)
-                    .HasMaxLength(100)
+                    .HasMaxLength(255)
                     .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<TeacherSubject>(entity =>
+            {
+                entity.ToTable("Teachre_Subject");
+
+                entity.Property(e => e.FkSubject).HasColumnName("FK_Subject");
+
+                entity.Property(e => e.FkTeacher).HasColumnName("FK_Teacher");
+
+                entity.HasOne(d => d.FkSubjectNavigation)
+                    .WithMany(p => p.TeacherSubjects)
+                    .HasForeignKey(d => d.FkSubject)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Subject_TS");
+
+                entity.HasOne(d => d.FkTeacherNavigation)
+                    .WithMany(p => p.TeacherSubjects)
+                    .HasForeignKey(d => d.FkTeacher)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Teacher_TS");
             });
 
             OnModelCreatingPartial(modelBuilder);

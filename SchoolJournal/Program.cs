@@ -5,8 +5,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-builder.Services.AddDbContext<SchoolJournalContext>(options => {
+builder.Services.AddDbContext<SchoolJournalContext>(options =>
+{
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    options.UseLazyLoadingProxies();
 });
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -36,6 +38,6 @@ app.UseSession();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Authorization}/{action=Authorization}/{id?}");
+    pattern: "{controller=Administration}/{action=Home}/{id?}");
 
 app.Run();

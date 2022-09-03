@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿/*using Microsoft.AspNetCore.Mvc;
 using SchoolJournal.ViewModels;
 using SchoolJournal.Models;
 using Microsoft.EntityFrameworkCore;
@@ -162,3 +162,4 @@ namespace SchoolJournal.Controllers
         }
     }
 }
+*/

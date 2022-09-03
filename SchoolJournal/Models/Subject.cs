@@ -7,7 +7,7 @@ namespace SchoolJournal.Models
     {
         public Subject()
         {
-            Journals = new HashSet<Journal>();
+            TeacherSubjects = new HashSet<TeacherSubject>();
         }
 
         public int Id { get; set; }
@@ -16,6 +16,6 @@ namespace SchoolJournal.Models
         public bool IsMiddle { get; set; }
         public bool IsSenior { get; set; }
 
-        public virtual ICollection<Journal> Journals { get; set; }
+        public virtual ICollection<TeacherSubject> TeacherSubjects { get; set; }
     }
 }

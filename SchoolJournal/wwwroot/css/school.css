@@ -1,0 +1,80 @@
+﻿.btn-primary {
+    background-color: #344E41;
+    color: #DAD7CD;
+    border-color: #344E41;
+}
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+    background-color: #344E41;
+    color: #A3B18A;
+    border-color: #344E41;
+}
+.btn-check:focus + .btn-primary, .btn-primary:focus {
+    background-color: #344E41;
+    color: #A3B18A;
+    border-color: #344E41;
+    box-shadow: 0 0 0 0.25rem rgba(85, 84, 80, 0.5);
+}
+.btn-check:checked + .btn-primary:focus, .btn-check:active + .btn-primary:focus, .btn-primary:active:focus, .btn-primary.active:focus, .show > .btn-primary.dropdown-toggle:focus {
+    box-shadow: 0 0 0 0.25rem rgba(85, 84, 80, 0.5);
+}
+.btn-primary:disabled, .btn-primary.disabled {
+    opacity: 0.5;
+    background-color: #344E41;
+    color: #DAD7CD;
+    border-color: #344E41;
+}
+
+.btn-success {
+    color: #3A5A40;
+    background-color: #DAD7CD;
+    border-color: #DAD7CD;
+}
+.btn-success:hover {
+    color: #344E41;
+    background-color: #DAD7CD;
+    border-color: #DAD7CD;
+}
+.btn-check:focus + .btn-success, .btn-success:focus {
+    color: #3A5A40;
+    background-color: #DAD7CD;
+    border-color: #DAD7CD;
+    box-shadow: 0 0 0 0.25rem rgba(85, 84, 80, 0.5);
+}
+.btn-check:checked + .btn-success:focus, .btn-check:active + .btn-success:focus, .btn-success:active:focus, .btn-success.active:focus, .show > .btn-success.dropdown-toggle:focus {
+    box-shadow: 0 0 0 0.25rem rgba(85, 84, 80, 0.5);
+}
+
+.text-light {
+    --bs-text-opacity: 1;
+    color: #DAD7CD !important;
+}
+.text-secondary {
+    --bs-text-opacity: 1;
+    color: #A3B18A !important;
+}
+.text-green {
+    --bs-text-opacity: 1;
+    color: #3A5A40 !important;
+}
+
+
+.bg-light {
+    background-color: #A3B18A !important;
+}
+.bg-dark {
+    background-color: #344E41 !important;
+}
+
+
+.form-control:focus {
+    color: #212529;
+    background-color: #fff;
+    border-color: #A3B18A;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(85, 84, 80, 0.25);
+}
+.form-select:focus {
+    border-color: #A3B18A;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(85, 84, 80, 0.25);
+}

@@ -1,0 +1,49 @@
+﻿@model SearchString
+@{
+    Layout = "_MainLayout";
+    ViewBag.Title = "Редагування учнів";
+    List<Student> students = ViewBag.Students;
+}
+<h4 class="text-center mt-3 mb-3">Список учнів</h4>
+<form method="post" class="row mb-3 ms-3 mt-3">
+    <div class="col-auto">
+        <span class="fs-6">Пошук зa ім'ям:</span>
+    </div>
+    <div class="col-4">
+        <input asp-for="SearchValue" type="text" class="form-control form-control-sm"/>
+    </div> 
+    <div class="col-auto">
+         <input class="rounded align-middle" 
+            type="image" src="~/img/search.png" alt="Пошук" width="30px" height="30px"/>
+    </div>
+    <div class="col-auto">
+        <a asp-action="AddStudent" class="btn btn-sm btn-success">+ Додати учня</a>
+    </div>
+</form>  
+@if(ViewBag.Message != null)
+{
+    <p class="text-danger mb-3 ms-4">@ViewBag.Message</p>
+}
+<table class="table">
+    <tr class="text-dark fw-bold bg-light">
+        <td class="ps-5">Логін</td>
+        <td>Пароль</td>
+        <td>ПІБ</td>
+        <td>Клас</td>
+        <td>E-mail батька</td>
+        <td></td>
+    </tr>
+
+    @foreach(Student s in students)
+    {
+        <tr>
+            <td>@s.Login</td>
+            <td>@s.Password</td>
+            <td>@s.Surname @s.Name @s.Middlename</td>
+            <td>@s.FkClassNavigation.Title</td>
+            <td>@s.ParrentEmail</td>
+            <td><a asp-action="EditStudent" asp-route-studentId="@s.Id" 
+                    class="btn btn-sm btn-primary">Редагувати</a></td>
+        </tr>
+    }
+</table>
