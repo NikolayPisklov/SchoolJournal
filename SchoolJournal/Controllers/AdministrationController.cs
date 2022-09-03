@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SchoolJournal.ViewModels;
 using Korzh.EasyQuery.Linq;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using SchoolJournal.Classes;
 
 namespace SchoolJournal.Controllers
 {
@@ -24,7 +25,8 @@ namespace SchoolJournal.Controllers
         [HttpGet]
         public IActionResult TeacherList()
         {
-            var teachers = _db.Teachers.Where(t => t.FireDate == null).OrderBy(t => t.Surname).ToList();
+            var teachers = _db.Teachers.Where(t => t.FireDate == null)
+                .OrderBy(t => t.Surname).ToList();
             ViewBag.Teachers = teachers;
             return View();
         }
@@ -105,6 +107,7 @@ namespace SchoolJournal.Controllers
             {
                 if (ModelState.IsValid)
                 {
+                    _db.ChangeTracker.Clear();
                     _db.Update(editedTeacher);
                     _db.SaveChanges();
                     ViewBag.Success = "Ви вдало відредагували вчителя!";
@@ -115,6 +118,51 @@ namespace SchoolJournal.Controllers
                     return View("Teacher");
                 }
             }
+        }
+        [HttpGet]
+        public IActionResult TeacherSubjectEdit(int teacherId) 
+        {
+            TeacherSubject teacherSubject = new TeacherSubject();
+            teacherSubject.FkTeacher = teacherId;
+            SetViewBagsForTeacherSubjectEdit(teacherId);
+            return View(teacherSubject);
+        }
+        [HttpPost]
+        public IActionResult TeacherSubjectEdit(TeacherSubject teacherSubject) 
+        {
+            ModelState.Remove("FkSubjectNavigation");
+            ModelState.Remove("FkTeacherNavigation");
+            ModelState.Remove("Journals");
+            if (ModelState.IsValid)
+            {
+                _db.Add(teacherSubject);
+                _db.SaveChanges();
+                return RedirectToRoute(new { action = "TeacherSubjectEdit", teacherId = teacherSubject.FkTeacher });
+            }
+            else 
+            {
+                SetViewBagsForTeacherSubjectEdit(teacherSubject.FkTeacher);
+                return View("TeacherSubjectEdit", teacherSubject);
+            }
+        }
+        public IActionResult DeleteTeacherSubject(int teacherId, int subjectId) 
+        {
+            TeacherSubject teacherSubject = _db.TeacherSubjects
+                .Where(t => t.FkSubject == subjectId && t.FkTeacher == teacherId).First();
+            if (_db.Journals.Any(t => t.FkTeacherSubject == teacherSubject.Id 
+                && t.FkSchoolYear == SchoolDateTime.GetCurrentYearId(_db)))
+            {
+                SetViewBagsForTeacherSubjectEdit(teacherId);
+                string subjectTitle = _db.Subjects.Where(s => s.Id == subjectId).Select(s => s.Title).First();
+                ViewBag.Message = $"Вчитель в даний момент читає предмет '{subjectTitle}'!";
+                return View("TeacherSubjectEdit", teacherSubject);
+            }
+            else 
+            {
+                _db.Remove(teacherSubject);
+                _db.SaveChanges();
+                return RedirectToRoute(new { action = "TeacherSubjectEdit", teacherId = teacherSubject.FkTeacher });
+            }           
         }
 
 
@@ -218,6 +266,94 @@ namespace SchoolJournal.Controllers
         }
 
 
+        [HttpGet]
+        public IActionResult JournalsList()
+        {
+            JournalsFilter filter = new JournalsFilter(_db);
+            SetJournalFiltersViewBags(filter);
+            return View(filter.Journals);
+        }
+        [HttpPost]
+        public IActionResult JournalsList(int? subjectId, int? classRankId)
+        {
+            JournalsFilter filter = new JournalsFilter(_db);
+            SetJournalFiltersViewBags(filter);
+            return View(filter.FilterJournals(subjectId, classRankId));
+        }
+
+
+        [HttpGet]
+        public IActionResult AddJournalClassSelect()
+        {
+            ViewBag.ClassSelect = true;
+            ViewBag.Classes = GetClassesList();
+            Journal journal = new Journal();
+            journal.FkSchoolYear = SchoolDateTime.GetCurrentYearId(_db);
+            return View("AddJournal", journal);
+        }
+
+        [HttpPost]
+        public IActionResult AddJournalSubjectSelect(Journal journal, int classId)
+        {
+            journal.FkClass = classId;
+            ViewBag.SubjectSelect = true;
+            Class clas = _db.Classes.Find(classId);
+            List<Subject> subjects = _db.Subjects.ToList();
+            if (clas.FkClassRank == 1)
+            {
+                ViewBag.Subjects = GetSubjectsList(subjects, SubjectsRank.Beginner);
+                return View("AddJournal", journal);
+            }
+            else if (clas.FkClassRank == 2)
+            {
+                ViewBag.Subjects = GetSubjectsList(subjects, SubjectsRank.Middle);
+                return View("AddJournal", journal);
+            }
+            else if (clas.FkClassRank == 3)
+            {
+                ViewBag.Subjects = GetSubjectsList(subjects, SubjectsRank.Senior);
+                return View("AddJournal", journal);
+            }
+            else 
+            {
+                ViewBag.Subjects = GetSubjectsList(subjects, SubjectsRank.None);
+                return View("AddJournal", journal);
+            }
+                
+        }
+        [HttpPost]
+        public IActionResult AddJournalTeacherSelect(Journal journal, int subjectId)
+        {
+            ViewBag.FkSubject = subjectId; 
+            ViewBag.TeacherSelect = true;
+            ViewBag.Teachers = GetTeachersList(subjectId);
+            return View("AddJournal", journal);
+        }
+        [HttpPost]
+        public IActionResult AddJournalPreview(Journal journal, int teacherId, int subjectId) 
+        {
+            TeacherSubject teacherSubject = _db.TeacherSubjects.Where(ts => ts.FkSubject == subjectId &&
+                ts.FkTeacher == teacherId).First();
+            journal.FkTeacherSubject = teacherSubject.Id;
+            ViewBag.Preview = true;
+            if (IsJournalExist(journal)) 
+            {
+                ViewBag.Message = "Такий журнал вже існує!";
+            }
+            ViewBag.Teacher = _db.Teachers.Find(teacherSubject.FkTeacher);
+            ViewBag.Subject = _db.Subjects.Find(teacherSubject.FkSubject);
+            ViewBag.Class = _db.Classes.Find(journal.FkClass);
+            ViewBag.SchoolYear = _db.SchoolYears.Find(SchoolDateTime.GetCurrentYearId(_db));
+            return View("AddJournal", journal);
+        }
+        [HttpPost]
+        public IActionResult AddJournalSave(Journal journal) 
+        {
+            _db.Add(journal);
+            _db.SaveChanges();
+            return View("Success");
+        }
+
         private bool IsLoginExist(string login)
         {
             var student = _db.Students.Where(s => s.Login == login).FirstOrDefault();
@@ -235,12 +371,67 @@ namespace SchoolJournal.Controllers
         private SelectList GetClassSelectList()
         {
             Dictionary<int, string> classesDict = new Dictionary<int, string>();
-            List<Class> classes = _db.Classes.Where(c => c.ReleaseDate > DateTime.Now).ToList();
+            List<Class> classes = _db.Classes.Where(c => c.ReleaseDate > DateTime.Now)
+                .OrderBy(c => c.Title.Length).ThenBy(c => c.Title).ToList();
             foreach (Class c in classes)
             {
                 classesDict.Add(c.Id, c.Title);
             }
             return new SelectList(classesDict, "Key", "Value");
+        }
+        private List<Class> GetClassesList() 
+        {
+            return _db.Classes.OrderBy(c => c.Title.Length).ThenBy(c => c.Title).ToList();
+        }
+        private List<Subject> GetSubjectsList(List<Subject> subjects, SubjectsRank rank) 
+        {
+            SubjectsList subjectsList = new SubjectsList(subjects, rank);
+            return subjectsList.GetSubjectsByRank();
+        }
+        private List<Teacher> GetTeachersList(int fkSubject) 
+        {
+            var teacherSubject = _db.TeacherSubjects.Where(x => x.FkSubject == fkSubject).ToList();
+            List<Teacher> teachers = new List<Teacher>();
+            foreach (TeacherSubject ts in teacherSubject) 
+            {
+                teachers.Add(_db.Teachers.Find(ts.FkTeacher));
+            }
+            return teachers;
+        }
+       
+        private void SetJournalFiltersViewBags(JournalsFilter filter) 
+        {
+            ViewBag.SubjectsSelectList = filter.GetSubjectsSelectList();
+            ViewBag.ClassRanksSelectList = filter.GetClassRangsSelecteList();
+        }
+        private bool IsJournalExist(Journal journal) 
+        {
+            var check = _db.Journals.Where(j => j.FkClass == journal.FkClass && 
+                j.FkTeacherSubject == journal.FkTeacherSubject &&
+                j.FkSchoolYear == journal.FkSchoolYear).FirstOrDefault();
+            if (check == null)
+            {
+                return false;
+            }
+            else 
+            {
+                return true;
+            }
+        }
+        private void SetViewBagsForTeacherSubjectEdit(int teacherId) 
+        {
+            List<TeacherSubject> teacherSubjects = _db.Teachers.Find(teacherId).TeacherSubjects
+                .OrderBy(ts => ts.FkSubjectNavigation.Title).ToList();
+            List<Subject> readingSubjects = new List<Subject>();
+            foreach (TeacherSubject ts in teacherSubjects)
+            {
+                readingSubjects.Add(ts.FkSubjectNavigation);
+            }
+            IQueryable<Subject> subjects = _db.Subjects.WhereBulkNotContains(readingSubjects)
+                .OrderBy(s => s.Title);
+            SubjectSelectList subjectSelectList = new SubjectSelectList(subjects);
+            ViewBag.TeacherSubjects = teacherSubjects;
+            ViewBag.SubjectSelectList = subjectSelectList.GetSelectList();
         }
     }
 }

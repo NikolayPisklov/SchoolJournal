@@ -12,8 +12,8 @@ namespace SchoolJournal.Models
         public int? FkMark { get; set; }
         public int FkLesson { get; set; }
 
-        public virtual Lesson? FkLessonNavigation { get; set; } 
-        public virtual Mark? FkMarkNavigation { get; set; }
-        public virtual Student? FkStudentNavigation { get; set; }
+        public virtual Lesson FkLessonNavigation { get; set; } = null!;
+        public virtual Mark FkMarkNavigation { get; set; } = null!;
+        public virtual Student FkStudentNavigation { get; set; } = null!;
     }
 }

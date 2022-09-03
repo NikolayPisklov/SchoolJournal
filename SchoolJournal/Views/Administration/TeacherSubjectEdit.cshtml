@@ -1,0 +1,42 @@
+﻿@model TeacherSubject
+@{
+    Layout = "_MainLayout";
+    ViewBag.Title = "Редагування призначених предемтів";
+    List<TeacherSubject> teacherSubjects = ViewBag.TeacherSubjects;
+}
+<div class="ms-3">
+    <h3 class="mt-3 mb-3">Призначені предмети</h3>
+
+        <p class="text-danger">@ViewBag.Message</p>
+    <div class="row mb-3">
+        <div class="col-4">
+            <ul class="list-group list-group-flush">
+                @foreach(TeacherSubject ts in teacherSubjects)
+                {
+                    <li class="list-group-item">
+                        @ts.FkSubjectNavigation.Title
+                        <a asp-action="DeleteTeacherSubject" asp-route-teacherId="@ts.FkTeacher"
+                            asp-route-subjectId="@ts.FkSubject"
+                            class="btn btn-danger btn-sm float-end">Видалити предмет</a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+    <h3 class="mb-3">Додавання предмету</h3>
+    <form method="post">
+        @Html.HiddenFor(m => m.FkTeacher)
+        <div class="row">
+            <div class="row mb-2 mt-0">
+                <span class="col-auto text-danger" asp-validation-for="FkSubject"></span>
+            </div>
+            <div class="col-auto">
+                @Html.DropDownListFor(m => m.FkSubject, ((SelectList)ViewBag.SubjectSelectList), "Оберіть предмет",
+                    new{@class = "form-select form-select text-center mr-3"})
+            </div>
+            <div class="col-auto">
+                <input asp-action="TeacherSubjectEdit" class="btn btn-primary" value="Додати предмет" type="submit"/>
+            </div>
+        </div>    
+    </form>
+</div>

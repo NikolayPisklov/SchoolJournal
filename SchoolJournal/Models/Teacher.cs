@@ -8,7 +8,7 @@ namespace SchoolJournal.Models
     {
         public Teacher()
         {
-            Journals = new HashSet<Journal>();
+            TeacherSubjects = new HashSet<TeacherSubject>();
         }
 
         public int Id { get; set; }
@@ -26,6 +26,6 @@ namespace SchoolJournal.Models
         public DateTime? HireDate { get; set; }
         public DateTime? FireDate { get; set; }
 
-        public virtual ICollection<Journal> Journals { get; set; }
+        public virtual ICollection<TeacherSubject> TeacherSubjects { get; set; }
     }
 }

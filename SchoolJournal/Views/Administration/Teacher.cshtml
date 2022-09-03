@@ -19,9 +19,12 @@ else
 {
     
 }
+
 <form method="post" class="ms-3">
-    @Html.HiddenFor(m => m.Id)
-    @Html.HiddenFor(m => m.FireDate)
+    @if (ViewBag.IsEdit == true)
+    {
+        @Html.HiddenFor(m => m.Id)
+    }    
     @if(ViewBag.Login!=null)
     {
         <div class="row mb-2 mt-0">
@@ -125,5 +128,28 @@ else
             <a asp-action="TeacherList" class="btn btn-success col-auto">Повернутись до списку вчителів</a>
         </div>
     }
-
 </form>
+
+<div class="ms-3 mt-3 mb-3"> 
+    <h3 class="mb-3">Призначені предмети</h3>
+    @if (Model.TeacherSubjects.Count() == 0)
+    {
+        <p>Вчителю ще не призначено жодного предмету!</p>
+    }
+    else
+    {
+       <div class="row">
+            <div class="col-auto">
+                <ul class="list-group list-group-flush">
+                    @foreach(TeacherSubject ts in Model.TeacherSubjects.OrderBy(t=>t.FkSubjectNavigation.Title))
+                    {
+                        <li class="list-group-item">@ts.FkSubjectNavigation.Title</li>
+                    }
+                </ul>
+            </div> 
+        </div>  
+    }      
+</div>
+<a asp-action="TeacherSubjectEdit" asp-route-teacherId="@Model.Id" 
+    class="btn btn-primary ms-1">Редагувати призначені предмети</a>
+
