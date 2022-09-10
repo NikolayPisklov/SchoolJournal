@@ -10,7 +10,6 @@
 <h5 class="text-center mt-3 mb-3">Редагування оцінки @student.Surname @student.Name @student.Middlename за @lessonDate.ToString("dd.MM.yyyy")</h5>
 
 <form method="post">
-    @Html.HiddenFor(m => m.Id)
     @Html.HiddenFor(m => m.FkLesson)
     @Html.HiddenFor(m => m.FkLessonNavigation)
     @Html.HiddenFor(m => m.FkStudent)

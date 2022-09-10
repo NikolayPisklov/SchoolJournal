@@ -1,4 +1,4 @@
-﻿@model List<AcademicPerformanceContent>
+﻿@model List<Journal>
 @{
     Layout = "_MainLayout";
     ViewBag.Title = "Список предметів";
@@ -7,12 +7,12 @@
 <div class="row justify-content-center">
     <div class="col-auto">
         <table class="table">
-            @foreach(AcademicPerformanceContent c in Model)
+            @foreach(Journal j in Model)
             {
                 <tr>
-                    <td>@c.Subject.Title</td>
+                    <td>@j.FkTeacherSubjectNavigation.FkSubjectNavigation.Title</td>
                     <td>
-                        <a asp-action="AcademicPerformance" asp-route-fkJournal="@c.Journal.Id" 
+                        <a asp-action="AcademicPerformance" asp-route-fkJournal="@j.Id" 
                             asp-route-fkStudent="@Context.Session.GetInt32("StudentId")"
                             class="btn btn-sm btn-primary">Переглянути</a>
                     </td>

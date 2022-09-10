@@ -1,4 +1,4 @@
-﻿@model List<JournalListContent>
+﻿@model List<Journal>
 @{
     Layout = "_MainLayout";
     ViewBag.Title = "Головна сторінка";
@@ -41,13 +41,15 @@
             </tr>
         </thead>
         <tbody class="text-dark text-center">
-            @foreach(JournalListContent j in Model)
+            @foreach(Journal j in Model)
             {
                 <tr>
-                    <td>@j.Subject.Title</td>
-                    <td>@j.Class.Title</td>
-                    <td>@j.Teacher.Surname @j.Teacher.Name @j.Teacher.Middlename</td>
-                    <td><a asp-controller="Journal" asp-action="Journal" asp-route-journalId="@j.Journal.Id"
+                    <td>@j.FkTeacherSubjectNavigation.FkSubjectNavigation.Title</td>
+                    <td>@j.FkClassNavigation.Title</td>
+                    <td>@j.FkTeacherSubjectNavigation.FkTeacherNavigation.Surname 
+                        @j.FkTeacherSubjectNavigation.FkTeacherNavigation.Name 
+                        @j.FkTeacherSubjectNavigation.FkTeacherNavigation.Middlename</td>
+                    <td><a asp-controller="Journal" asp-action="Journal" asp-route-journalId="@j.Id"
                         class="btn btn-sm btn-primary">Переглянути</a></td>
                 </tr>                
             }

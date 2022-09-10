@@ -15,7 +15,9 @@
     @Html.HiddenFor(m => m.Date)
     @Html.HiddenFor(m => m.Theme)
     @Html.HiddenFor(m => m.Homework)
-    <div class="row justify-content-center mb-2 mt-0"><span class="col-auto text-danger" asp-validation-for="FkJournal"></span></div>
+    <div class="row justify-content-center mb-2 mt-0">
+        <span class="col-auto text-danger" asp-validation-for="FkJournal"></span>
+    </div>
     <div class="row justify-content-center">
         <div class="col-3">
             @Html.DropDownListFor(m => m.FkJournal, ((SelectList)ViewBag.JournalsSelectList), "Оберіть журнал", 

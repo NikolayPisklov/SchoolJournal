@@ -4,7 +4,7 @@
     ViewBag.Title = $"{ViewBag.ClassTitle} - {ViewBag.SubjectTitle}";
     List<Lesson> lessons = ViewBag.Lessons;
     List<Student> students = ViewBag.Students;
-    List<ProgressContent> progresses = ViewBag.Progresses;
+    List<Progress> progresses = ViewBag.Progresses;
     Journal journal = ViewBag.Journal;
 }
 <h4 class="mt-3 mb-3 text-center">@ViewBag.ClassTitle - @ViewBag.SubjectTitle</h4>
@@ -26,8 +26,8 @@
                 <td class="ps-3 align-middle">@student.Surname @student.Name @student.Middlename</td>
                 @foreach (Lesson lesson in Model)
                 {
-                    var progress = progresses.Where(p => p.Progress.FkStudent == student.Id 
-                        && p.Progress.FkLesson == lesson.Id).FirstOrDefault();
+                    var progress = progresses.Where(p => p.FkStudent == student.Id 
+                        && p.FkLesson == lesson.Id).FirstOrDefault();
                     @if (progress == null)
                     {
                         <td class="p-1 h-100">
@@ -38,8 +38,8 @@
                     else
                     {
                         <td class="text-center p-1 h-100">
-                            <a asp-action="EditProgress" asp-route-progressId="@progress.Progress.Id"
-                                class="btn btn-light w-100 h-100 p-1">@progress.Mark.Title</a>
+                            <a asp-action="EditProgress" asp-route-progressId="@progress.Id"
+                                class="btn btn-light w-100 h-100 p-1">@progress.FkMarkNavigation.Title</a>
                         </td>
                     }
             }

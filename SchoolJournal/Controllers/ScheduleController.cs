@@ -1,6 +1,7 @@
-﻿/*using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using SchoolJournal.ViewModels;
+using SchoolJournal.Classes;
 
 namespace SchoolJournal.Controllers
 {
@@ -17,7 +18,7 @@ namespace SchoolJournal.Controllers
         {
             int? fkClass = HttpContext.Session.GetInt32("FkClass");
             List<DateTime> schoolYearDays = GetSchoolYearDays();
-            ViewBag.Content = GetScheduleContentForStudent((int)fkClass);
+            ViewBag.Content = GetScheduleContentForClass((int)fkClass);
             ViewBag.LessonTimes = _db.LessonTimes.OrderBy(lt => lt.StartTime.Length).ThenBy(lt => lt.StartTime).ToList();
             return View("Schedule", Paging<DateTime>.Create(schoolYearDays, pageNumber ?? GetCurrentPage(schoolYearDays), 7));
         }
@@ -32,7 +33,7 @@ namespace SchoolJournal.Controllers
         public IActionResult AdminSchedule(int? pageNumber, int fkClass)
         {
             List<DateTime> schoolYearDays = GetSchoolYearDays();
-            ViewBag.Content = GetScheduleContentForStudent(fkClass);
+            ViewBag.Content = GetScheduleContentForClass(fkClass);
             ViewBag.LessonTimes = _db.LessonTimes.OrderBy(lt => lt.StartTime.Length).ThenBy(lt => lt.StartTime).ToList();
             ViewBag.FkClass = fkClass;
             HttpContext.Session.SetInt32("schedulePage", pageNumber ?? GetCurrentPage(schoolYearDays));
@@ -51,7 +52,9 @@ namespace SchoolJournal.Controllers
             newLesson.FkLessonTime = fkLessonTime;
             newLesson.Date = lessonDate;
             ViewBag.FkClass = fkClass;
-            ViewBag.JournalsSelectList = GetJournalJournalsSelectList(fkClass);
+            IQueryable<JournalContent> journalContents = GetJournalContents(fkClass);
+            JournalsSelectList journalsSelectList = new JournalsSelectList(journalContents);
+            ViewBag.JournalsSelectList = journalsSelectList.GetSelectList();
             return View(newLesson);
         }
         [HttpPost]
@@ -68,7 +71,9 @@ namespace SchoolJournal.Controllers
             else
             {
                 ViewBag.FkClass = fkClass;
-                ViewBag.JournalsSelectList = GetJournalJournalsSelectList(fkClass);
+                IQueryable<JournalContent> journalContents = GetJournalContents(fkClass);
+                JournalsSelectList journalsSelectList = new JournalsSelectList(journalContents);
+                ViewBag.JournalsSelectList = journalsSelectList.GetSelectList();
                 return View();
             }
         }
@@ -77,7 +82,9 @@ namespace SchoolJournal.Controllers
         {
             int fkClass = _db.Journals.Where(j => j.Id == fkJournal).Select(j => j.FkClass).First(); 
             ViewBag.FkClass = fkClass;
-            ViewBag.JournalsSelectList = GetJournalJournalsSelectList(fkClass);
+            IQueryable<JournalContent> journalContents = GetJournalContents(fkClass);
+            JournalsSelectList journalsSelectList = new JournalsSelectList(journalContents);
+            ViewBag.JournalsSelectList = journalsSelectList.GetSelectList();
             Lesson lesson = _db.Lessons.Find(lessonId);
             ViewBag.OldFkJournal = lesson.FkJournal;
             return View(lesson);
@@ -87,18 +94,19 @@ namespace SchoolJournal.Controllers
         {
             if (ModelState.IsValid)
             {
-                Journal journal = _db.Journals.Find(fkJournal);
-                lesson.FkJournalNavigation = _db.Journals.Find(fkJournal);
-                journal.Lessons.Add(lesson);
+                _db.ChangeTracker.Clear();
                 _db.Update(lesson);
                 _db.SaveChanges();
-                return RedirectToRoute(new { action = "AdminSchedule", pageNumber = HttpContext.Session.GetInt32("schedulePage"), fkClass });
+                return RedirectToRoute(new { action = "AdminSchedule", 
+                    pageNumber = HttpContext.Session.GetInt32("schedulePage"), fkClass });
 
             }
             else
             {
                 ViewBag.FkClass = fkClass;
-                ViewBag.JournalsSelectList = GetJournalJournalsSelectList(fkClass);
+                IQueryable<JournalContent> journalContents = GetJournalContents(fkClass);
+                JournalsSelectList journalsSelectList = new JournalsSelectList(journalContents);
+                ViewBag.JournalsSelectList = journalsSelectList.GetSelectList();
                 return View();
             }
         }
@@ -108,15 +116,17 @@ namespace SchoolJournal.Controllers
             lesson.FkJournal = oldFkJournal;
             _db.Remove(lesson);
             _db.SaveChanges();
-            return RedirectToRoute(new { action = "AdminSchedule", pageNumber = HttpContext.Session.GetInt32("schedulePage"), fkClass });
+            return RedirectToRoute(new { action = "AdminSchedule", 
+                pageNumber = HttpContext.Session.GetInt32("schedulePage"), fkClass });
         }
 
-        private List<ScheduleContent> GetScheduleContentForStudent(int fkClass) 
+        private List<ScheduleContent> GetScheduleContentForClass(int fkClass) 
         {
             return (from j in _db.Journals
                     join l in _db.Lessons on j.Id equals l.FkJournal
-                    join s in _db.Subjects on j.FkSubject equals s.Id
-                    join t in _db.Teachers on j.FkTeacher equals t.Id
+                    join ts in _db.TeacherSubjects on j.FkTeacherSubject equals ts.Id
+                    join s in _db.Subjects on ts.FkSubject equals s.Id
+                    join t in _db.Teachers on ts.FkTeacher equals t.Id
                     join c in _db.Classes on j.FkClass equals c.Id
                     where j.FkClass == fkClass && j.FkSchoolYear == SchoolDateTime.GetCurrentYearId(_db)
                     select new ScheduleContent { Journal = j, Lesson = l, Subject = s, Teacher = t, Class = c }).ToList();
@@ -125,11 +135,23 @@ namespace SchoolJournal.Controllers
         {
             return (from j in _db.Journals
                     join l in _db.Lessons on j.Id equals l.FkJournal
-                    join s in _db.Subjects on j.FkSubject equals s.Id
-                    join t in _db.Teachers on j.FkTeacher equals t.Id
+                    join ts in _db.TeacherSubjects on j.FkTeacherSubject equals ts.Id
+                    join s in _db.Subjects on ts.FkSubject equals s.Id
+                    join t in _db.Teachers on ts.FkTeacher equals t.Id
                     join c in _db.Classes on j.FkClass equals c.Id
-                    where j.FkTeacher == teacherId && j.FkSchoolYear == SchoolDateTime.GetCurrentYearId(_db)
+                    where ts.FkTeacher == teacherId && j.FkSchoolYear == SchoolDateTime.GetCurrentYearId(_db)
                     select new ScheduleContent { Journal = j, Lesson = l, Subject = s, Teacher = t, Class = c }).ToList();
+        }
+        private IQueryable<JournalContent> GetJournalContents(int fkClass)
+        {
+            return  from j in _db.Journals
+                    join ts in _db.TeacherSubjects on j.FkTeacherSubject equals ts.Id
+                    join s in _db.Subjects on ts.FkSubject equals s.Id
+                    join t in _db.Teachers on ts.FkTeacher equals t.Id
+                    join c in _db.Classes on j.FkClass equals c.Id
+                    where j.FkClass == fkClass && j.FkSchoolYear == SchoolDateTime.GetCurrentYearId(_db)
+                    select new JournalContent
+                    { Journal = j, Subject = s, Teacher = t, Class = c };
         }
         private List<DateTime> GetSchoolYearDays() 
         {
@@ -143,23 +165,6 @@ namespace SchoolJournal.Controllers
                 days.Add(date);
             }
             return days;
-        }
-        private SelectList GetJournalJournalsSelectList(int fkClass) 
-        {
-            List<ScheduleContent> scheduleContents = (from j in _db.Journals
-                                                      join s in _db.Subjects on j.FkSubject equals s.Id
-                                                      join t in _db.Teachers on j.FkTeacher equals t.Id
-                                                      join c in _db.Classes on j.FkClass equals c.Id
-                                                      where j.FkClass == fkClass && j.FkSchoolYear == SchoolDateTime.GetCurrentYearId(_db)
-                                                      select new ScheduleContent 
-                                                      { Journal = j, Subject = s, Teacher = t, Class = c }).ToList();
-            Dictionary<int, string> journals = new Dictionary<int, string>();
-            foreach (ScheduleContent sc in scheduleContents) 
-            {
-                string pointTitle = $"{sc.Subject.Title} - {sc.Teacher.Surname} {sc.Teacher.Name[0]}. {sc.Teacher.Middlename[0]}.";
-                journals.Add(sc.Journal.Id, pointTitle);
-            }
-            return new SelectList(journals, "Key", "Value"); ;
         }
         private int GetCurrentPage(List<DateTime> days) 
         {
@@ -176,4 +181,4 @@ namespace SchoolJournal.Controllers
             }
         }
     }
-}*/
+}

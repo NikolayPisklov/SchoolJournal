@@ -1,4 +1,4 @@
-﻿/*using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using SchoolJournal.ViewModels;
 using SchoolJournal.Models;
 using Microsoft.EntityFrameworkCore;
@@ -58,6 +58,7 @@ namespace SchoolJournal.Controllers
         [HttpPost]
         public IActionResult AddProgress(Progress progress) 
         {
+            RemoveProgressNavPropertiesFromState();
             if (ModelState.IsValid)
             {
                 _db.Add(progress);
@@ -90,6 +91,7 @@ namespace SchoolJournal.Controllers
         [HttpPost]
         public IActionResult EditProgress(Progress progress)
         {
+            RemoveProgressNavPropertiesFromState();
             if (ModelState.IsValid)
             {
                 _db.Update(progress);
@@ -118,21 +120,13 @@ namespace SchoolJournal.Controllers
             _db.SaveChanges();
             return RedirectToRoute(new { action = "Journal", pageNumber = HttpContext.Session.GetInt32("journalPage"), journalId = fkJournal });
         }
-        private List<ProgressContent> GetProgressContent(int journalId) 
-        {
-            return (from l in _db.Lessons
-                    join p in _db.Progresses on l.Id equals p.FkLesson
-                    join m in _db.Marks on p.FkMark equals m.Id
-                    where l.FkJournal == journalId
-                    select new ProgressContent
-                    { Progress = p, Mark = m }).ToList();
-        }
         private void SetViewBagForJournal(List<Lesson> lessons, Journal journal) 
         {
             ViewBag.ClassTitle = _db.Classes.Where(c => c.Id == journal.FkClass).Select(c => c.Title).First();
-            ViewBag.SubjectTitle = _db.Subjects.Where(s => s.Id == journal.FkSubject).Select(s => s.Title).First();
+            ViewBag.SubjectTitle = _db.TeacherSubjects
+                .Where(s => s.Id == journal.FkTeacherSubject).Select(s => s.FkSubjectNavigation.Title).First();
             ViewBag.Lessons = lessons;
-            ViewBag.Progresses = GetProgressContent(journal.Id);
+            ViewBag.Progresses = _db.Progresses.Where(p=>p.FkLessonNavigation.FkJournal == journal.Id).ToList();
             ViewBag.Students = _db.Students.Where(s => s.FkClass == journal.FkClass).ToList();
             ViewBag.Journal = journal;
         }
@@ -150,6 +144,13 @@ namespace SchoolJournal.Controllers
                 return (int)Math.Truncate(result) + 1;
             }
         }
+        private void RemoveProgressNavPropertiesFromState() 
+        {
+            ModelState.Remove("FkLessonNavigation");
+            ModelState.Remove("FkMarkNavigation");
+            ModelState.Remove("FkStudentNavigation");
+        }
+        //To marks select list
         private SelectList GetMarksSelectList() 
         {
             Dictionary<int, string> marksDict = new Dictionary<int, string>();
@@ -162,4 +163,3 @@ namespace SchoolJournal.Controllers
         }
     }
 }
-*/

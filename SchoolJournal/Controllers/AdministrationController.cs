@@ -269,15 +269,19 @@ namespace SchoolJournal.Controllers
         [HttpGet]
         public IActionResult JournalsList()
         {
-            JournalsFilter filter = new JournalsFilter(_db);
-            SetJournalFiltersViewBags(filter);
+            List<Journal> journals = _db.Journals.Where(j => j.FkSchoolYear ==
+                SchoolDateTime.GetCurrentYearId(_db)).ToList();
+            JournalsFilter filter = new JournalsFilter(journals);
+            SetJournalFiltersViewBags();
             return View(filter.Journals);
         }
         [HttpPost]
         public IActionResult JournalsList(int? subjectId, int? classRankId)
         {
-            JournalsFilter filter = new JournalsFilter(_db);
-            SetJournalFiltersViewBags(filter);
+            List<Journal> journals = _db.Journals.Where(j => j.FkSchoolYear ==
+                SchoolDateTime.GetCurrentYearId(_db)).ToList();
+            JournalsFilter filter = new JournalsFilter(journals);
+            SetJournalFiltersViewBags();
             return View(filter.FilterJournals(subjectId, classRankId));
         }
 
@@ -399,10 +403,14 @@ namespace SchoolJournal.Controllers
             return teachers;
         }
        
-        private void SetJournalFiltersViewBags(JournalsFilter filter) 
+        private void SetJournalFiltersViewBags() 
         {
-            ViewBag.SubjectsSelectList = filter.GetSubjectsSelectList();
-            ViewBag.ClassRanksSelectList = filter.GetClassRangsSelecteList();
+            SubjectSelectList subjectSelectList =
+                new SubjectSelectList(_db.Subjects.OrderBy(s => s.Title));
+            ClassRankSelectList classRankSelectList =
+                new ClassRankSelectList(_db.ClassRanks.OrderBy(c => c.Title));
+            ViewBag.SubjectsSelectList = subjectSelectList.GetSelectList();
+            ViewBag.ClassRanksSelectList = classRankSelectList.GetSelectList();
         }
         private bool IsJournalExist(Journal journal) 
         {

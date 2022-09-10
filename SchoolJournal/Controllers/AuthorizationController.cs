@@ -115,7 +115,7 @@ namespace SchoolJournal.Controllers
             user.Surname = teacher.Surname;
             user.Name = teacher.Name;
             user.Middlename = teacher.Middlename;
-            user.HireDate = teacher.HireDate;
+            user.HireDate = Convert.ToDateTime(teacher.HireDate);
             user.FireDate = teacher.FireDate;
         }
         private void SetAdminProperties(User user)
