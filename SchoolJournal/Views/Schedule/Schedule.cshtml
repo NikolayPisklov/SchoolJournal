@@ -35,22 +35,31 @@
                         && sc.Lesson.FkLessonTime == time.Id).FirstOrDefault();
                     if (currentContent == null)
                     {
-                        <td style="height:75px" class="text-end p-0">
-                            @if (status == "Admin" && day.Month > 8 || day.Month < 6)
-                            {
-                                <a asp-action="AddLesson" asp-route-fkClass="@ViewBag.FkClass" asp-route-fkLessonTime="@time.Id"
-                                    asp-route-lessonDate="@day.Date" class="btn btn-light pt-0 pb-0 m-1">+</a>
-                            }
-                        </td>
+                        if (day.DayOfWeek == DayOfWeek.Saturday || day.DayOfWeek == DayOfWeek.Sunday)
+                        {
+                            <td></td>
+                        }
+                        else
+                        {
+                           <td style="height:75px" class="text-end p-0">
+                                @if (status == "Admin" && day.Date > DateTime.Now.Date && (day.Month > 8 || day.Month < 6))
+                                {
+                                    <a asp-action="AddLesson" asp-route-fkClass="@ViewBag.FkClass" asp-route-fkLessonTime="@time.Id"
+                                        asp-route-lessonDate="@day.Date" class="btn btn-light pt-0 pb-0 m-1">+</a>
+                                }
+                            </td> 
+                        }                       
                     }
                     else
                     {
                         <td class="p-0 ps-3 text-nowrap">
                             @currentContent.Subject.Title 
-                            @if(status == "Admin" && day.Month > 8 || day.Month < 6)
+                            @if(status == "Admin" && day.Date > DateTime.Now.Date && day.Month > 8 || day.Month < 6)
                             {
                                  <a asp-action="EditLesson" asp-route-fkJournal="@currentContent.Lesson.FkJournal" 
-                                    asp-route-lessonId="@currentContent.Lesson.Id" class="btn btn-light pt-0 pb-0 m-1 float-end">/</a>
+                                    asp-route-lessonId="@currentContent.Lesson.Id" class="m-1">
+                                        <img class="rounded float-end m-1" style="width:25px; height:25px" src="~/img/pencil3.0.png" alt="Редагувати">
+                                    </a>
                             }
                             <br/>
                             @currentContent.Class.Title<br/>

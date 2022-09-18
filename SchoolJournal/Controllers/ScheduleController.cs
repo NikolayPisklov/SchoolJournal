@@ -8,7 +8,7 @@ namespace SchoolJournal.Controllers
     public class ScheduleController : Controller
     {
         private readonly SchoolJournalContext _db;
-        private int _currentPage = 1;//To do: change to selecting page to datetime.now
+
         public ScheduleController(SchoolJournalContext db)
         {
             _db = db;
@@ -20,7 +20,7 @@ namespace SchoolJournal.Controllers
             List<DateTime> schoolYearDays = GetSchoolYearDays();
             ViewBag.Content = GetScheduleContentForStudent(user.FkClass);
             ViewBag.LessonTimes = _db.LessonTimes.OrderBy(lt => lt.StartTime.Length).ThenBy(lt => lt.StartTime).ToList();
-            return View("Schedule", Paging<DateTime>.Create(schoolYearDays, pageNumber ?? _currentPage, 7));
+            return View("Schedule", Paging<DateTime>.Create(schoolYearDays, pageNumber ?? GetCurrentPage(schoolYearDays), 7));
         }
         public IActionResult TeacherSchedule(int? pageNumber)
         {
@@ -28,7 +28,7 @@ namespace SchoolJournal.Controllers
             List<DateTime> schoolYearDays = GetSchoolYearDays();
             ViewBag.Content = GetScheduleContentForTeacher(user.Id);
             ViewBag.LessonTimes = _db.LessonTimes.OrderBy(lt => lt.StartTime.Length).ThenBy(lt => lt.StartTime).ToList();
-            return View("Schedule", Paging<DateTime>.Create(schoolYearDays, pageNumber ?? _currentPage, 7));
+            return View("Schedule", Paging<DateTime>.Create(schoolYearDays, pageNumber ?? GetCurrentPage(schoolYearDays), 7));
         }
         public IActionResult AdminSchedule(int? pageNumber, int fkClass)
         {
@@ -36,7 +36,8 @@ namespace SchoolJournal.Controllers
             ViewBag.Content = GetScheduleContentForStudent(fkClass);
             ViewBag.LessonTimes = _db.LessonTimes.OrderBy(lt => lt.StartTime.Length).ThenBy(lt => lt.StartTime).ToList();
             ViewBag.FkClass = fkClass;
-            return View("Schedule", Paging<DateTime>.Create(schoolYearDays, pageNumber ?? _currentPage, 7));
+            HttpContext.Session.SetInt32("schedulePage", pageNumber ?? GetCurrentPage(schoolYearDays));
+            return View("Schedule", Paging<DateTime>.Create(schoolYearDays, pageNumber ?? GetCurrentPage(schoolYearDays), 7));            
         }
         public IActionResult ClassesSchedules()
         {
@@ -61,7 +62,8 @@ namespace SchoolJournal.Controllers
             {
                 _db.Add(newLesson);
                 _db.SaveChanges();
-                return RedirectToAction("AdminSchedule", new { _currentPage, fkClass });
+                return RedirectToRoute(new { action = "AdminSchedule", 
+                    pageNumber = HttpContext.Session.GetInt32("schedulePage"), fkClass = fkClass });
 
             }
             else
@@ -78,6 +80,7 @@ namespace SchoolJournal.Controllers
             ViewBag.FkClass = fkClass;
             ViewBag.JournalsSelectList = GetJournalJournalsSelectList(fkClass);
             Lesson lesson = _db.Lessons.Find(lessonId);
+            ViewBag.OldFkJournal = lesson.FkJournal;
             return View(lesson);
         }
         [HttpPost]
@@ -90,7 +93,7 @@ namespace SchoolJournal.Controllers
                 journal.Lessons.Add(lesson);
                 _db.Update(lesson);
                 _db.SaveChanges();
-                return RedirectToAction("AdminSchedule", new { _currentPage, fkClass });
+                return RedirectToRoute(new { action = "AdminSchedule", pageNumber = HttpContext.Session.GetInt32("schedulePage"), fkClass });
 
             }
             else
@@ -99,6 +102,14 @@ namespace SchoolJournal.Controllers
                 ViewBag.JournalsSelectList = GetJournalJournalsSelectList(fkClass);
                 return View();
             }
+        }
+        [HttpPost]
+        public IActionResult DeleteLesson(Lesson lesson, int oldFkJournal, int fkClass) 
+        {
+            lesson.FkJournal = oldFkJournal;
+            _db.Remove(lesson);
+            _db.SaveChanges();
+            return RedirectToRoute(new { action = "AdminSchedule", pageNumber = HttpContext.Session.GetInt32("schedulePage"), fkClass });
         }
         private List<ScheduleContent> GetScheduleContentForStudent(int fkClass) 
         {
@@ -149,6 +160,20 @@ namespace SchoolJournal.Controllers
                 journals.Add(sc.Journal.Id, pointTitle);
             }
             return new SelectList(journals, "Key", "Value"); ;
+        }
+        private int GetCurrentPage(List<DateTime> days) 
+        {
+            DateTime currentDay = days.Where(d => d.Date == DateTime.Now.Date).FirstOrDefault();
+            double dayIndex = days.IndexOf(currentDay) + 1;
+            double result = dayIndex / 7;
+            if (result <= 1)
+            {
+                return 1;
+            }
+            else 
+            {
+                return (int)Math.Truncate(result) + 1;
+            }
         }
     }
 }

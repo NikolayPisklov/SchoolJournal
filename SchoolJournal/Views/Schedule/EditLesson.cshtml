@@ -29,8 +29,8 @@
                 type="submit" value="Зберегти зміни" class="btn" style="background-color: #2F3E46; color: #CAD2C5;"/>
         </div>
         <div class="col-auto">
-            <input asp-route-fkClass="@ViewBag.FkClass" asp-action="DeleteLesson"
-                type="submit" value="Видалити урок" class="btn btn-danger"/>
+            <input asp-route-oldFkJournal="@ViewBag.OldFkJournal" asp-route-fkClass="@ViewBag.FkClass" 
+                asp-action="DeleteLesson" type="submit" value="Видалити урок" class="btn btn-danger"/>
         </div>
     </div>
 </form>
