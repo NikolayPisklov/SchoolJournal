@@ -1,0 +1,5 @@
+﻿@{
+    Layout = "_MainLayout";
+    var status = User.FindFirstValue(ClaimTypes.Role);
+}
+Hello @status
