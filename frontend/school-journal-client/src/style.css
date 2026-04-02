@@ -1,0 +1,89 @@
+@import 'tailwindcss';
+@tailwind utilities;
+
+
+@layer components{
+    .btn-gray{
+        @apply rounded-sm px-1 py-0.5 bg-gray-300
+            text-black font-medium active:scale-[.99] 
+            focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300
+            transition
+    }
+    .btn-primary{
+        @apply rounded-sm px-1 py-1 bg-blue-950
+            text-gray-200 font-medium active:scale-[.99] 
+            focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300
+            transition
+    }
+    .btn-red{
+        @apply rounded-sm px-1 py-1 bg-red-800
+            text-gray-100 font-medium active:scale-[.99] 
+            focus:outline-none focus-visible:ring-2 focus-visible:ring-red-100
+            transition
+    }
+    .text-box{
+        @apply rounded-sm border border-gray-300 py-0.5 px-0.5
+            placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200
+            focus:border-blue-500 transition-shadow duration-150
+    }
+}
+
+button.active {
+    padding: 2px;
+    background: rgb(216, 231, 253); 
+    color: black;
+    border-color: rgb(209 213 219);
+    border-radius: 10%;
+}
+
+button:disabled,
+button[disabled]{
+    background-color: #e0e0e0;
+    color: #666666;
+}
+
+.error{
+    color: red
+}
+
+.user-list {
+    list-style: none;
+    padding: 0;
+}
+
+.user-list li {
+    padding: 5px;
+    border: 1px solid #ddd;
+    margin-bottom: 5px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 0.2s;
+}
+
+.user-list li:hover {
+    background-color: #f0f0f0;
+}
+
+.user-list li.selected {
+    background-color: #e6ecff;
+}
+
+.dp__action_buttons .dp__action_select {
+  background-color: #172554 !important; /* blue-950 */
+  color: #e5e7eb !important;
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
+.dp__action_buttons .dp__action_cancel {
+  background-color: #d1d5db !important; /* gray-300 */
+  color: black !important;
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
+.dp__calendar .dp__active_date {
+  background-color: #d1d5db !important; /* gray-300 */
+  color: black !important;
+  border-radius: 4px;
+}
