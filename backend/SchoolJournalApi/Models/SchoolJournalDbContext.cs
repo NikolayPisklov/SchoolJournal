@@ -195,7 +195,7 @@ namespace SchoolJournalApi.Models
                 .WithOne(s => s.Student)
                 .HasForeignKey(s => s.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
-
+            modelBuilder.Entity<User>().HasIndex(u => u.Login).IsUnique();
             modelBuilder.Entity<User>().Property(x => x.LastName).HasMaxLength(100);
             modelBuilder.Entity<User>().HasIndex(x => x.LastName).HasDatabaseName("IX_Users_LastName");
             modelBuilder.Entity<User>().HasIndex(x => x.FirstName).HasDatabaseName("IX_Users_FirstName");

@@ -2,8 +2,9 @@
 using SchoolJournalApi.Dtos.Lesson;
 using SchoolJournalApi.Exceptions;
 using SchoolJournalApi.Models;
+using SchoolJournalApi.Services.DbServices.Interfaces;
 
-namespace SchoolJournalApi.Services
+namespace SchoolJournalApi.Services.DbServices
 {
     public class LessonDbService : DbService<LessonDto>, ILessonDbService
     {
@@ -17,18 +18,18 @@ namespace SchoolJournalApi.Services
                 if (journal is null)
                     throw new EntityNotFoundException("Journal of Lesson");
                 if (!IsLessonDateValidToJournalYear(journal.Year, (DateOnly)lessonDto.LessonDate!))
-                    throw new EntityHasLogicConflictException("Lesson date is out of range of Journal's year.");
+                    throw new EntityHasBusinessLogicConflictException("Lesson date is out of range of Journal's year.");
                 if (notNullDate.DayOfWeek == DayOfWeek.Sunday || notNullDate.DayOfWeek == DayOfWeek.Saturday)
-                    throw new EntityHasLogicConflictException("Lessons can't be on weekends");
+                    throw new EntityHasBusinessLogicConflictException("Lessons can't be on weekends");
                 Lesson newLesson = new Lesson();
                 newLesson.JournalId = lessonDto.JournalId;
                 newLesson.LessonDate = (DateOnly)lessonDto.LessonDate!;
                 _db.Add(newLesson);
                 await _db.SaveChangesAsync();
             }
-            catch (DbUpdateException) 
+            catch (DbUpdateException ex) 
             {
-                throw new EntityAddingException("Ошибка при добавлении урока!");
+                throw new EntityAddingException("An error has occurred while adding a Lesson entity!", ex);
             }
         }
 
@@ -41,7 +42,7 @@ namespace SchoolJournalApi.Services
             }
             if(lesson.LessonDate <= DateOnly.FromDateTime(DateTime.Now))
             {
-                throw new EntityHasLogicConflictException("Cannot delete lesson after it is being teached");
+                throw new EntityHasBusinessLogicConflictException("Cannot delete lesson after it is being teached");
             }
             lesson.IsDeleted = true;
             await _db.SaveChangesAsync();
@@ -79,9 +80,9 @@ namespace SchoolJournalApi.Services
                 lesson.Theme = detailsDto.Theme;
                 await _db.SaveChangesAsync();
             }
-            catch (DbUpdateException) 
+            catch (DbUpdateException ex) 
             {
-                throw new EntityHasLogicConflictException("");//TO DO: NEW EXCEPTION FOR UPDATE
+                throw new EntityUpdateException("An error has occurred while updating a Lesson entity!", ex);
             }           
         }
 

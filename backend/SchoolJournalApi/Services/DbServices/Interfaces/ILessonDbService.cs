@@ -1,6 +1,6 @@
 ﻿using SchoolJournalApi.Dtos.Lesson;
 
-namespace SchoolJournalApi.Services
+namespace SchoolJournalApi.Services.DbServices.Interfaces
 {
     public interface ILessonDbService
     {

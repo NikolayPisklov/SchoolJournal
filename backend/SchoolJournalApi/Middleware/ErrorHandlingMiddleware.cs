@@ -24,7 +24,6 @@ namespace SchoolJournalApi.Middleware
             catch (Exception ex) 
             {
                 await HandleExceptionAsync(context, ex);
-                _logger.LogError(ex.GetBaseException(), "Exception occured");
             }
         }
 
@@ -70,12 +69,13 @@ namespace SchoolJournalApi.Middleware
                     errorCode = "ENTITY_ALREADY_EXISTS_ERROR";
                     errorMessage = ex.Message;
                     break;
-                case EntityHasLogicConflictException:
+                case EntityHasBusinessLogicConflictException:
                     code = HttpStatusCode.Conflict;
                     errorCode = "ENTITY_LOGIC_CONFLICT_ERROR";
                     errorMessage = ex.Message;
                     break;
                 default:
+                    _logger.LogError(ex, "Unknown exception has occured");
                     errorMessage = "An exception has occured";
                     errorCode = "UNKNOWN_ERROR";
                     break;

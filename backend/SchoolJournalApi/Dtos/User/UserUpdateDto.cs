@@ -2,7 +2,7 @@
 
 namespace SchoolJournalApi.Dtos.User
 {
-    public class UserDetailsForUpdateDto
+    public class UserUpdateDto
     {
         [Required(ErrorMessage = "Неизвестная ошибка! Мы уже работаем над ней.")]
         public int Id { get; set; }

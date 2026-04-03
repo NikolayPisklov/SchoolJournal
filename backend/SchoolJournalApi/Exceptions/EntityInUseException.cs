@@ -2,7 +2,7 @@
 {
     public class EntityInUseException : AppException
     {
-        public EntityInUseException(string entity, int id) 
-            : base($"{entity} with id {id} is in use in other tables.") { }
+        public EntityInUseException(string message, Exception innerException) 
+            : base(message, innerException) { }
     }
 }

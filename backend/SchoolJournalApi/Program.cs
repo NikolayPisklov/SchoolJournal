@@ -6,7 +6,10 @@ using Scalar.AspNetCore;
 using SchoolJournalApi;
 using SchoolJournalApi.Middleware;
 using SchoolJournalApi.Models;
-using SchoolJournalApi.Services;
+using SchoolJournalApi.Services.AppServices;
+using SchoolJournalApi.Services.AppServices.Interfaces;
+using SchoolJournalApi.Services.DbServices;
+using SchoolJournalApi.Services.DbServices.Interfaces;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -58,8 +61,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true
         };
     });
-
-builder.Services.AddScoped<IUsersDbService, UsersDbService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUsersDbService, UserDbService>();
 builder.Services.AddScoped<IClassDbService, ClassDbService>();
 builder.Services.AddScoped<ITeacherSubjectDbService, TeacherSubjectDbService>();
 builder.Services.AddScoped<IStudentClassService, StudentClassService>();

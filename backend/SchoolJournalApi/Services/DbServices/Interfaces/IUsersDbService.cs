@@ -1,17 +1,20 @@
 ﻿using SchoolJournalApi.Dto_s;
 using SchoolJournalApi.Dtos.User;
+using SchoolJournalApi.Models;
 
-namespace SchoolJournalApi.Services
+namespace SchoolJournalApi.Services.DbServices.Interfaces
 {
     public interface IUsersDbService
     {
         Task<List<StatusDto>> GetUserStatusesAsync();
-        Task<UserDetailsForUpdateDto?> GetUserDetailsAsync(int userId);
-        Task<bool> TryUpdateUserDetailsAsync(UserDetailsForUpdateDto userDetails);
-        Task<bool> TryAddUserAsync(UserDetailsForCreationDto userDetails);
+        Task<UserUpdateDto?> GetUserDetailsAsync(int userId);
+        Task SaveChangesAsync();
+        Task<bool> TryAddUserAsync(UserCreationDto userDetails);
         Task<PagingResultDto<ListedUserDto>> GetUsersOnPageAsync(int? statusId, string? search, int pageSize, int page = 1);
         Task<bool> TryDeleteUserAsync(int userId);
         Task<int> GetUserStatusAsync(int userId);
         Task<ClassDto> GetStudentsClassAsync(int userId);
+        Task<User?> FindUserAsync(int userId);
+        Task<bool> IsThereUserWithSameLoginAsync(string login, int? userId);
     }
 }

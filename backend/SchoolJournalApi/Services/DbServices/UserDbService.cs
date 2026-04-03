@@ -4,14 +4,13 @@ using SchoolJournalApi.Dto_s;
 using SchoolJournalApi.Dtos.User;
 using SchoolJournalApi.Exceptions;
 using SchoolJournalApi.Models;
+using SchoolJournalApi.Services.DbServices.Interfaces;
 
-namespace SchoolJournalApi.Services
+namespace SchoolJournalApi.Services.DbServices
 {
-    public class UsersDbService : DbService<User>, IUsersDbService
+    public class UserDbService : DbService<User>, IUsersDbService
     {
-        private readonly SchoolJournalDbContext _db;
-
-        public UsersDbService(SchoolJournalDbContext db) : base(db) { _db = db; }
+        public UserDbService(SchoolJournalDbContext db) : base(db) { _db = db; }
 
         public async Task<PagingResultDto<ListedUserDto>> GetUsersOnPageAsync(int? statusId, string? search, int pageSize, int page = 1) 
         {
@@ -43,14 +42,14 @@ namespace SchoolJournalApi.Services
             }).ToListAsync();
             return statuses;
         }
-        public async Task<UserDetailsForUpdateDto?> GetUserDetailsAsync(int userId) 
+        public async Task<UserUpdateDto?> GetUserDetailsAsync(int userId) 
         {
             var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == userId);
             if(user is null) 
             {
                 return null;
             }
-            var dto = new UserDetailsForUpdateDto
+            var dto = new UserUpdateDto
             {
                 Id = userId,
                 Login = user.Login,
@@ -61,31 +60,18 @@ namespace SchoolJournalApi.Services
             };
             return dto;
         }
-        public async Task<bool> TryUpdateUserDetailsAsync(UserDetailsForUpdateDto userDetails) 
+        public async Task SaveChangesAsync() 
         {
-            var user = await _db.Users.FindAsync(userDetails.Id);
-            if (user is null) 
+            try
             {
-                return false;
+                await _db.SaveChangesAsync();
             }
-            if(await _db.Users.AnyAsync(x => x.Login == userDetails.Login) 
-                && !userDetails.Login.Equals(user.Login))
+            catch (DbUpdateException ex) 
             {
-                return false;
+                throw new EntityUpdateException("An error has occured while updating User entity!", ex);
             }
-            user.Login = userDetails.Login;
-            user.Email = userDetails.Email;
-            user.FirstName = userDetails.FirstName;
-            user.LastName = userDetails.LastName;
-            user.MiddleName = userDetails.MiddleName;
-            if (userDetails.Password is not null) 
-            {
-                user.PasswordHash = new PasswordHasher<User>().HashPassword(user, userDetails.Password);
-            }
-            await _db.SaveChangesAsync();
-            return true;
         }
-        public async Task<bool> TryAddUserAsync(UserDetailsForCreationDto userDetails) 
+        public async Task<bool> TryAddUserAsync(UserCreationDto userDetails) 
         {
             if(await _db.Users.AnyAsync(x => x.Login == userDetails.Login)) 
             {
@@ -118,13 +104,9 @@ namespace SchoolJournalApi.Services
                 await _db.SaveChangesAsync();
                 return true;
             }
-            catch (DbUpdateConcurrencyException) 
+            catch (DbUpdateException ex) 
             {
-                throw  new EntityNotFoundException($"User");
-            }
-            catch (DbUpdateException) 
-            {
-                throw new EntityInUseException("User", userId);
+                throw new EntityInUseException($"Entity User with Id: {userId} is in use and can't be deleted!", ex);
             }
         }
         public async Task<int> GetUserStatusAsync(int userId)
@@ -158,6 +140,11 @@ namespace SchoolJournalApi.Services
                 Year = clas.Year
             };
         }
+        public async Task<User?> FindUserAsync(int userId) 
+        {
+            return await _db.Users.FindAsync(userId);
+        }
+
 
         private IQueryable<User> FilterUsers(IQueryable<User> users, int? statusId, string? search) 
         {
@@ -179,6 +166,19 @@ namespace SchoolJournalApi.Services
                 );
             }
             return users;
+        }
+
+        public async Task<bool> IsThereUserWithSameLoginAsync(string login, int? userId)
+        {
+            if(userId is null) 
+            {
+                return await _db.Users.AnyAsync(x => login.Equals(x.Login));
+            }
+            else 
+            {
+                return await _db.Users.AnyAsync(x => login.Equals(x.Login) && x.Id != userId);
+            }
+                
         }
     }
 }

@@ -5,8 +5,9 @@ using SchoolJournalApi.Exceptions;
 using Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal;
 using Microsoft.EntityFrameworkCore.Storage;
 using SchoolJournalApi.Dtos.User;
+using SchoolJournalApi.Services.DbServices.Interfaces;
 
-namespace SchoolJournalApi.Services
+namespace SchoolJournalApi.Services.DbServices
 {
     public class StudentClassService : DbService<StudentClass>, IStudentClassService
     {
@@ -24,9 +25,9 @@ namespace SchoolJournalApi.Services
                 _db.Remove(studentClass);
                 await _db.SaveChangesAsync();
             }
-            catch (DbUpdateException) 
+            catch (DbUpdateException ex) 
             {
-                throw new EntityInUseException("Student-Class", studentClassId);
+                throw new EntityInUseException($"Entity Student-Class with Id: {studentClassId} is in use and can't be deleted!", ex);
             }
         }
         public async Task<List<ListedStudentDto>> GetStudentsInClassAsync(int classId)
@@ -75,10 +76,10 @@ namespace SchoolJournalApi.Services
                 await _db.SaveChangesAsync();
                 await transaction.CommitAsync();
             }
-            catch(DbUpdateException) 
+            catch(DbUpdateException ex) 
             {
                 await transaction.RollbackAsync();
-                throw new EntityUpdateException("Student-Class", "Failed to transfer user to another class.");
+                throw new EntityUpdateException("An error has occurred while updating a StudentClass entity!", ex);
             }
         }
 
@@ -90,13 +91,12 @@ namespace SchoolJournalApi.Services
                 if (!await _db.Users.AnyAsync(u => u.Id == userId && u.StatusId == (int)UserStatuses.Student))
                 {
                     await transaction.RollbackAsync();
-                    throw new EntityHasStatusDiscrepancyException(userId,
-                        "Provided user is not a student and can't be assigned to a class.");
+                    throw new EntityHasStatusDiscrepancyException("Provided user is not a student and can't be assigned to a class.");
                 }
                 if (await _db.StudentClasses.AnyAsync(s => s.UserId == userId && s.IsActive))
                 {
                     await transaction.RollbackAsync();
-                    throw new EntityAddingException("Student-Class", "Student already associated with another class.");
+                    throw new EntityHasBusinessLogicConflictException("Student already associated with another class.");
                 }
                 var newStudentClass = new StudentClass();
                 newStudentClass.ClassId = classId;
@@ -106,10 +106,10 @@ namespace SchoolJournalApi.Services
                 await _db.SaveChangesAsync();
                 await transaction.CommitAsync();
             }
-            catch (DbUpdateException)
+            catch (DbUpdateException ex)
             {
                 await transaction.RollbackAsync();
-                throw new EntityAddingException("Student-Class");
+                throw new EntityAddingException("An error has occurred while updating a StudentClass entity!", ex);
             }
         }
     }

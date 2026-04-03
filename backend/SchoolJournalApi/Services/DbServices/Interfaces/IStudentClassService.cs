@@ -1,6 +1,6 @@
 ﻿using SchoolJournalApi.Dtos.User;
 
-namespace SchoolJournalApi.Services
+namespace SchoolJournalApi.Services.DbServices.Interfaces
 {
     public interface IStudentClassService
     {

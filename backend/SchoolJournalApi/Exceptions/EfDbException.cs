@@ -2,7 +2,7 @@
 {
     public class EfDbException : AppException
     {
-        public EfDbException(string message) : base(message)
+        public EfDbException(string message, Exception innerException) : base(message, innerException)
         {
         }
     }

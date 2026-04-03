@@ -3,8 +3,9 @@ using SchoolJournalApi.Dto_s;
 using SchoolJournalApi.Enum_s;
 using SchoolJournalApi.Exceptions;
 using SchoolJournalApi.Models;
+using SchoolJournalApi.Services.DbServices.Interfaces;
 
-namespace SchoolJournalApi.Services
+namespace SchoolJournalApi.Services.DbServices
 {
     public class TeacherSubjectDbService : DbService<TeacherSubject>, ITeacherSubjectDbService
     {
@@ -15,7 +16,7 @@ namespace SchoolJournalApi.Services
             var isUserTeacher = await _db.Users.AnyAsync(u => u.Id == userId 
                 && u.StatusId == (int)UserStatuses.Teacher);
             if (!isUserTeacher) {
-                throw new EntityHasStatusDiscrepancyException(userId, "User is not a teacher and can't teach a subject!");
+                throw new EntityHasStatusDiscrepancyException("User is not a teacher and can't be assosiated with a subject!");
             }
             var newTS = new TeacherSubject
             {
@@ -38,9 +39,9 @@ namespace SchoolJournalApi.Services
                 _db.Remove(ts);
                 await _db.SaveChangesAsync();
             }
-            catch (DbUpdateException) 
+            catch (DbUpdateException ex) 
             {
-                throw new EntityInUseException("Teacher Subject", teacherSubjectId);
+                throw new EntityInUseException($"Entity Teacher-Subject with Id: {teacherSubjectId} is already in use and can't be deleted", ex);
             }
         }
         public async Task<List<TeacherSubjectsDto>> GetAllTeacherSubjectsAsync(int? eduLevelId)

@@ -2,7 +2,7 @@
 
 namespace SchoolJournalApi.Dtos.User
 {
-    public class UserDetailsForCreationDto
+    public class UserCreationDto
     {
         [Required(ErrorMessage = "Выбор статуса пользователя обязателен!")]
         public int? StatusId { get; set; }

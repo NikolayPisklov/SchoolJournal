@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SchoolJournalApi.Dtos.Lesson;
 using SchoolJournalApi.Dtos.Progress;
 using SchoolJournalApi.Enum_s;
-using SchoolJournalApi.Services;
+using SchoolJournalApi.Services.DbServices.Interfaces;
 
 namespace SchoolJournalApi.Controllers
 {

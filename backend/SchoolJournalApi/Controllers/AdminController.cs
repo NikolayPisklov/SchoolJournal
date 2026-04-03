@@ -4,7 +4,8 @@ using SchoolJournalApi.Dto_s;
 using SchoolJournalApi.Dtos.Journal;
 using SchoolJournalApi.Dtos.User;
 using SchoolJournalApi.Enum_s;
-using SchoolJournalApi.Services;
+using SchoolJournalApi.Services.AppServices.Interfaces;
+using SchoolJournalApi.Services.DbServices.Interfaces;
 
 namespace SchoolJournalApi.Controllers
 {
@@ -13,6 +14,7 @@ namespace SchoolJournalApi.Controllers
     [Authorize(Roles = UserStatusesNames.Admin)]
     public class AdminController : ControllerBase
     {
+        private readonly IUserService _userService;
         private readonly IUsersDbService _dbService;
         private readonly IClassDbService _classDbService;
         private readonly ITeacherSubjectDbService _teacherSubjectDbService;
@@ -21,13 +23,14 @@ namespace SchoolJournalApi.Controllers
 
         public AdminController(IUsersDbService dbService, IClassDbService classDbService,
             ITeacherSubjectDbService teacherSubjectDbService, IStudentClassService studentClassService,
-            IJournalDbService journalDbService)
+            IJournalDbService journalDbService, IUserService userService)
         {
             _dbService = dbService;
             _classDbService = classDbService;
             _teacherSubjectDbService = teacherSubjectDbService;
             _studentClassService = studentClassService;
             _journalDbService = journalDbService;
+            _userService = userService;
         }
         [HttpGet("get-users-on-page")]
         public async Task<IActionResult> GetUsersOnPage(int? status, string? search, int pageSize, int page) 
@@ -59,23 +62,13 @@ namespace SchoolJournalApi.Controllers
             return Ok(statuses);
         }
         [HttpPut("update-user-details")]
-        public async Task<IActionResult> UpdateUserDetails(UserDetailsForUpdateDto? updatedUser) 
+        public async Task<IActionResult> UpdateUserDetails(UserUpdateDto updatedUser) 
         {
-            if (!ModelState.IsValid || updatedUser is null) 
-            {
-                return BadRequest(ModelState);
-            }
-            if(await _dbService.TryUpdateUserDetailsAsync(updatedUser)) 
-            {
-                return Ok("Данные пользователя успешно обновлены!");
-            }
-            else 
-            {
-                return Conflict("Пользователь с таким логином уже существует.");
-            }                
+            await _userService.UpdateUserAsync(updatedUser);
+            return Ok();
         }
         [HttpPost("add-user")]
-        public async Task<IActionResult> AddUser(UserDetailsForCreationDto? userDetails) 
+        public async Task<IActionResult> AddUser(UserCreationDto? userDetails) 
         {
             if(!ModelState.IsValid || userDetails is null) 
             {

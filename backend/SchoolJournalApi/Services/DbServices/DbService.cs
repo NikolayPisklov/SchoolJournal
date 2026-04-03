@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SchoolJournalApi.Models;
 
-namespace SchoolJournalApi.Services
+namespace SchoolJournalApi.Services.DbServices
 {
     public class DbService<T>
     {

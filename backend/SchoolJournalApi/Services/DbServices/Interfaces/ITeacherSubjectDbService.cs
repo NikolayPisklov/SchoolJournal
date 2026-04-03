@@ -1,6 +1,6 @@
 ﻿using SchoolJournalApi.Dto_s;
 
-namespace SchoolJournalApi.Services
+namespace SchoolJournalApi.Services.DbServices.Interfaces
 {
     public interface ITeacherSubjectDbService
     {

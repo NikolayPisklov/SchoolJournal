@@ -7,8 +7,9 @@ using SchoolJournalApi.Dtos.Progress;
 using SchoolJournalApi.Dtos.Journal;
 using SchoolJournalApi.Dtos.Lesson;
 using SchoolJournalApi.Enum_s;
+using SchoolJournalApi.Services.DbServices.Interfaces;
 
-namespace SchoolJournalApi.Services
+namespace SchoolJournalApi.Services.DbServices
 {
     public class JournalDbService : DbService<Journal>, IJournalDbService
     {
@@ -23,7 +24,7 @@ namespace SchoolJournalApi.Services
                     && j.TeacherSubjectId == dto.TeacherSubjectId && j.Year == DateTime.Now.Year);
                 if (isThereSameJournal) 
                 {
-                    throw new EntityAlreadyExistsException("Сущьность журнала стакими параметрами уже существует!");
+                    throw new EntityAlreadyExistsException("Journal for that class of that subject and year already exists!");
                 }
                 var newJournal = new Journal();
                 newJournal.ClassId = dto.ClassId;
@@ -32,9 +33,9 @@ namespace SchoolJournalApi.Services
                 await _db.AddAsync(newJournal);
                 await _db.SaveChangesAsync();
             }
-            catch (DbUpdateException) 
+            catch (DbUpdateException ex) 
             {
-                throw new EntityAddingException("Journal", "Ошибка при добавлении журнала");
+                throw new EntityAddingException("An error has occurred while adding a Journal entity!", ex);
             }
         }
 
@@ -50,9 +51,9 @@ namespace SchoolJournalApi.Services
                 _db.Remove(journal);
                 await _db.SaveChangesAsync();
             }
-            catch (DbUpdateException) 
+            catch (DbUpdateException ex) 
             {
-                throw new EntityInUseException("Journal", journalId);
+                throw new EntityInUseException($"Entity Journal with Id: {journalId} is in use and can't be deleted!", ex);
             }
         }
 

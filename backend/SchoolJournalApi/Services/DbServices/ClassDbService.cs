@@ -3,8 +3,9 @@ using SchoolJournalApi.Dto_s;
 using SchoolJournalApi.Enum_s;
 using SchoolJournalApi.Exceptions;
 using SchoolJournalApi.Models;
+using SchoolJournalApi.Services.DbServices.Interfaces;
 
-namespace SchoolJournalApi.Services
+namespace SchoolJournalApi.Services.DbServices
 {
     public class ClassDbService : DbService<Class>, IClassDbService
     {
@@ -39,9 +40,9 @@ namespace SchoolJournalApi.Services
                 await _db.AddAsync(newClass);
                 await _db.SaveChangesAsync();
             }
-            catch (DbUpdateException) 
+            catch (DbUpdateException ex) 
             {
-                throw new EntityAddingException("Class");
+                throw new EntityAddingException("An error has occurred while adding a Class entity!", ex);
             }
         }
         public async Task DeleteClassAsync(int classId)
@@ -56,9 +57,9 @@ namespace SchoolJournalApi.Services
                 _db.Remove(entity);
                 await _db.SaveChangesAsync();
             }
-            catch (DbUpdateException) 
+            catch (DbUpdateException ex) 
             {
-                throw new EntityInUseException("Class", classId);
+                throw new EntityInUseException($"Entity Class with Id: {classId} is in use and can't be deleted!", ex);
             }
         }
 
@@ -122,9 +123,9 @@ namespace SchoolJournalApi.Services
                 //may be automatic edu level change
                 await _db.SaveChangesAsync();
             }
-            catch (DbUpdateException)
+            catch (DbUpdateException ex)
             {
-                throw new EntityUpdateException("Class");
+                throw new EntityUpdateException("An error has occurred while updating a Class entity!", ex);
             }
         }
 

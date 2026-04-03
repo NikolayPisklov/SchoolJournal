@@ -1,7 +1,7 @@
 ﻿using SchoolJournalApi.Dtos;
 using SchoolJournalApi.Dtos.Progress;
 
-namespace SchoolJournalApi.Services
+namespace SchoolJournalApi.Services.DbServices.Interfaces
 {
     public interface IProgressDbService
     {

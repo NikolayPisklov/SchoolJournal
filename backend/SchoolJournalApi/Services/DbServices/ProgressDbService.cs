@@ -4,9 +4,10 @@ using SchoolJournalApi.Dtos.Progress;
 using SchoolJournalApi.Enums;
 using SchoolJournalApi.Exceptions;
 using SchoolJournalApi.Models;
+using SchoolJournalApi.Services.DbServices.Interfaces;
 using System.Data.Common;
 
-namespace SchoolJournalApi.Services
+namespace SchoolJournalApi.Services.DbServices
 {
     public class ProgressDbService : DbService<JournalProgressDto>, IProgressDbService
     {
@@ -19,7 +20,7 @@ namespace SchoolJournalApi.Services
                 if((dto.AttendanceId == (int)Attendances.Absent || dto.AttendanceId == (int)Attendances.AbsentWithReason)
                     && dto.MarkId is not null)
                 {
-                    throw new EntityHasLogicConflictException("Ученик не может быть отсутствующим и при этом получить оценку.");
+                    throw new EntityHasBusinessLogicConflictException("Student can't be absent and recieve a mark!");
                 }
                 Progress progress = new Progress();
                 progress.UserId = dto.UserId;
@@ -30,9 +31,9 @@ namespace SchoolJournalApi.Services
                 await _db.AddAsync(progress);
                 await _db.SaveChangesAsync();
             }
-            catch (DbUpdateException) 
+            catch (DbUpdateException ex) 
             {
-                throw new EntityAddingException("Progress", "Ошибка при добавлении отметов в БД");
+                throw new EntityAddingException("An error has occured while adding Progress entity!", ex);
             }            
         }
         public async Task UpdateProgressAsync(ProgressDto dto)
@@ -42,7 +43,7 @@ namespace SchoolJournalApi.Services
                 if ((dto.AttendanceId == (int)Attendances.Absent || dto.AttendanceId == (int)Attendances.AbsentWithReason)
                     && dto.MarkId is not null)
                 {
-                    throw new EntityHasLogicConflictException("Ученик не может быть отсутствующим и при этом получить оценку.");
+                    throw new EntityHasBusinessLogicConflictException("Student can't be absent and recieve a mark!");
                 }
                 var progress = await _db.Progresses.FindAsync(dto.Id);
                 if(progress is null)
@@ -64,9 +65,9 @@ namespace SchoolJournalApi.Services
                 _db.Add(newProgress);
                 await _db.SaveChangesAsync();
             }
-            catch (DbUpdateException) 
+            catch (DbUpdateException ex) 
             {
-                throw new EntityUpdateException("Progress", "Ошибка при обновлении отметок");
+                throw new EntityUpdateException("An error has occured while updating Progress entity!", ex);
             }
         }
         public async Task<List<AttendanceDto>> GetAllAttendancesAsync()
@@ -171,9 +172,9 @@ namespace SchoolJournalApi.Services
                 result.FactMarks = factMarks;
                 return result;
             }
-            catch (DbException)
+            catch (DbException ex)
             {
-                throw new EfDbException("Failed to select data from DB.");
+                throw new EfDbException("Failed to select data from database!", ex);
             }            
         }
         private bool IsProgressDtoEqualToProgress(Progress progress, ProgressDto dto)
