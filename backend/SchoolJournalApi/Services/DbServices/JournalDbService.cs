@@ -166,7 +166,7 @@ namespace SchoolJournalApi.Services.DbServices
                 .FirstOrDefaultAsync(s => s.UserId == studentId && s.IsActive);
             if(studentClass is null)
             {
-                throw new EntityNotFoundException($"Active class for student with Id: {studentId} is not found");
+                throw new EntityNotFoundException($"Active journal for student with Id: {studentId} is not found");
             }
             var journals = await _db.Journals.AsNoTracking()
                 .Where(j => j.ClassId == studentClass.ClassId && j.Year == DateTime.Now.Year)

@@ -15,17 +15,15 @@ namespace SchoolJournalApi.Controllers
     public class AdminController : ControllerBase
     {
         private readonly IUserService _userService;
-        private readonly IUsersDbService _dbService;
         private readonly IClassDbService _classDbService;
         private readonly ITeacherSubjectDbService _teacherSubjectDbService;
         private readonly IStudentClassService _studentClassService;
         private readonly IJournalDbService _journalDbService;
 
-        public AdminController(IUsersDbService dbService, IClassDbService classDbService,
+        public AdminController(IClassDbService classDbService,
             ITeacherSubjectDbService teacherSubjectDbService, IStudentClassService studentClassService,
             IJournalDbService journalDbService, IUserService userService)
         {
-            _dbService = dbService;
             _classDbService = classDbService;
             _teacherSubjectDbService = teacherSubjectDbService;
             _studentClassService = studentClassService;
@@ -35,7 +33,7 @@ namespace SchoolJournalApi.Controllers
         [HttpGet("get-users-on-page")]
         public async Task<IActionResult> GetUsersOnPage(int? status, string? search, int pageSize, int page) 
         {
-            var result = await _dbService.GetUsersOnPageAsync(status, search, pageSize, page);
+            var result = await _userService.GetUsersOnPageAsync(status, search, pageSize, page);
             if (result.Items is null || result.Items.Count() == 0) 
             {
                 return NotFound();
@@ -48,17 +46,13 @@ namespace SchoolJournalApi.Controllers
         [HttpGet("get-user-details")]
         public async Task<IActionResult> GetUserDetails(int id)
         {
-            var user = await _dbService.GetUserDetailsAsync(id);
-            if (user is null)
-            {
-                return NotFound();
-            }
+            var user = await _userService.GetUserDetailsAsync(id);
             return Ok(user);
         }
         [HttpGet("get-user-statuses")]
         public async Task<IActionResult> GetUserStatuses() 
         {
-            var statuses = await _dbService.GetUserStatusesAsync();
+            var statuses = await _userService.GetUserStatusesAsync();
             return Ok(statuses);
         }
         [HttpPut("update-user-details")]
@@ -68,43 +62,27 @@ namespace SchoolJournalApi.Controllers
             return Ok();
         }
         [HttpPost("add-user")]
-        public async Task<IActionResult> AddUser(UserCreationDto? userDetails) 
+        public async Task<IActionResult> AddUser(UserCreationDto userDetails) 
         {
-            if(!ModelState.IsValid || userDetails is null) 
-            {
-                return BadRequest(ModelState);
-            }
-            if(await _dbService.TryAddUserAsync(userDetails)) 
-            {
-                return Ok("Пользователь успешно добавлен в систему!");
-            }
-            else 
-            {
-                return Conflict("Пользователь с таким логином уже существует.");
-            }
+            await _userService.AddUserAsync(userDetails);
+            return Ok();
         }
         [HttpDelete("delete-user")]
         public async Task<IActionResult> DeleteUser(int userId)
         {
-            if (await _dbService.TryDeleteUserAsync(userId))
-            {
-                return Ok("Пользователь успешно удалён.");
-            }
-            else
-            {
-                return NotFound("Пользователь не найден в базе данных.");
-            }       
+            await _userService.DeleteUserAsync(userId);
+            return Ok();
         }
         [HttpGet("get-user-status-id")]
         public async Task<IActionResult> GetUserStatusId(int id) 
         {
-            var result = await _dbService.GetUserStatusAsync(id);
+            var result = await _userService.GetUserStatusAsync(id);
             return Ok(result);
         }
         [HttpGet("get-class-of-student")]
         public async Task<IActionResult> GetStudentsClass(int userId) 
         {
-            var dto = await _dbService.GetStudentsClassAsync(userId);
+            var dto = await _userService.GetClassOfStudentAsync(userId);
             return Ok(dto);
         }
         //Classes-----------------------------------------------------------------------------------------------------------------
