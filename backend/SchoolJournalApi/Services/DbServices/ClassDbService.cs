@@ -13,30 +13,10 @@ namespace SchoolJournalApi.Services.DbServices
         {
           
         }
-        public async Task AddClassAsync(ClassCreationDto classDto)
+        public async Task AddClassAsync(Class newClass)
         {
             try
             {
-                int number = DateTime.Now.Year - (int)classDto.Year!;
-                int eduLevel;
-                if (number < 5)
-                {
-                    eduLevel = (int)EducationalLevels.Junior;
-                }
-                else if (number >= 5 && number < 10) 
-                {
-                    eduLevel = (int)EducationalLevels.Middle;
-                }
-                else 
-                {
-                    eduLevel = (int)EducationalLevels.Senior;
-                }
-                    Class newClass = new Class
-                    {
-                        Title = classDto.Title,
-                        Year = (int)classDto.Year,
-                        EducationalLevelId = eduLevel
-                    };
                 await _db.AddAsync(newClass);
                 await _db.SaveChangesAsync();
             }
@@ -45,82 +25,26 @@ namespace SchoolJournalApi.Services.DbServices
                 throw new EntityAddingException("An error has occurred while adding a Class entity!", ex);
             }
         }
-        public async Task DeleteClassAsync(int classId)
+        public async Task<Class?> FindClassAsync(int classId) 
+        {
+            return await _db.Classes.FindAsync(classId);
+        }
+        public async Task DeleteClassAsync(Class classEntity)
         {
             try
             {
-                var entity = await _db.Classes.FindAsync(classId);
-                if (entity is null)
-                {
-                    throw new EntityNotFoundException("Class");
-                }
-                _db.Remove(entity);
+                _db.Remove(classEntity);
                 await _db.SaveChangesAsync();
             }
-            catch (DbUpdateException ex) 
+            catch (DbUpdateException ex)
             {
-                throw new EntityInUseException($"Entity Class with Id: {classId} is in use and can't be deleted!", ex);
+                throw new EntityInUseException($"Entity Class with Id: {classEntity.Id} is in use and can't be deleted!", ex);
             }
         }
-
-        public async Task<ClassDto> GetClassDtoAsync(int classId)
-        {
-            var theClass = await _db.Classes.FirstOrDefaultAsync(c => c.Id == classId);
-            if (theClass is null) 
-            {
-                throw new EntityNotFoundException("Class");
-            }
-            ClassDto dto = new ClassDto();
-            dto.Id = theClass.Id;
-            dto.EducationalLevelId = theClass.EducationalLevelId;
-            dto.Title = theClass.Title;
-            dto.Year = theClass.Year;
-            return dto;
-        }
-
-        public async Task<List<ClassDto>> GetClassesAsync()
-        {
-            List<ClassDto> classes = await _db.Classes.OrderBy(c => c.Year)
-                .Select(c => new ClassDto {
-                    Id = c.Id,
-                    EducationalLevelId = c.EducationalLevelId,
-                    Title = c.Title,
-                    Year = c.Year
-                }).ToListAsync();
-            if(classes.Count == 0) 
-            {
-                throw new EntityNotFoundException("Classes not found");
-            }
-            return classes;
-        }
-
-        public async Task<PagingResultDto<ClassDto>> GetClassesOnPageAsync(int pageSize, int? educationalLevelId, int page = 1)
-        {
-            var classes = _db.Classes.AsNoTracking();
-            classes = FilterClasses(classes, educationalLevelId);
-            int numberOfPages = await GetNumberOfItemsPagesAsync(classes, pageSize);
-            List<ClassDto> classesDto = classes.OrderBy(c => c.Year).Skip((page - 1) * pageSize).Take(pageSize)
-                .Select(c => new ClassDto
-                {
-                    Id = c.Id,
-                    EducationalLevelId = c.EducationalLevelId,
-                    Title = c.Title,
-                    Year = c.Year
-                }).ToList();
-            return new PagingResultDto<ClassDto> {Items = classesDto, NumberOfPages = numberOfPages};
-        }
-        public async Task UpdateClassAsync(ClassDto classDto)
+        public async Task SaveChangesAsync()
         {
             try
             {
-                var oldClass = _db.Classes.FirstOrDefault(c => c.Id == classDto.Id);
-                if (oldClass is null)
-                {
-                    throw new EntityNotFoundException("Class");
-                }
-                oldClass.Title = classDto.Title;
-                oldClass.Year = (int)classDto.Year!;
-                //may be automatic edu level change
                 await _db.SaveChangesAsync();
             }
             catch (DbUpdateException ex)
@@ -128,16 +52,9 @@ namespace SchoolJournalApi.Services.DbServices
                 throw new EntityUpdateException("An error has occurred while updating a Class entity!", ex);
             }
         }
-
-
-        private IQueryable<Class> FilterClasses(IQueryable<Class> classes, int? educationalLevelId)
+        public IQueryable<Class> GetClasses() 
         {
-            if(educationalLevelId is null) 
-            {
-                return classes;
-            }
-            classes = classes.Where(c => c.EducationalLevelId == educationalLevelId);
-            return classes;
+            return _db.Classes.AsNoTracking();
         }
     }
 }

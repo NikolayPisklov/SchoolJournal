@@ -1,14 +1,13 @@
-﻿using SchoolJournalApi.Dto_s;
+﻿using SchoolJournalApi.Models;
 
 namespace SchoolJournalApi.Services.DbServices.Interfaces
 {
     public interface IClassDbService
     {
-        Task<PagingResultDto<ClassDto>> GetClassesOnPageAsync(int pageSize, int? educationalLevelId, int page = 1);
-        Task AddClassAsync(ClassCreationDto classDto);
-        Task UpdateClassAsync(ClassDto classDto);
-        Task DeleteClassAsync(int classId);
-        Task<List<ClassDto>> GetClassesAsync();
-        Task<ClassDto> GetClassDtoAsync(int classId);
+        Task AddClassAsync(Class newClass);
+        Task<Class?> FindClassAsync(int classId);
+        Task SaveChangesAsync();
+        Task DeleteClassAsync(Class classEntity);
+        IQueryable<Class> GetClasses();
     }
 }

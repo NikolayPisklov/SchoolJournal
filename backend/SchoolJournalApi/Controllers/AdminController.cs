@@ -15,16 +15,16 @@ namespace SchoolJournalApi.Controllers
     public class AdminController : ControllerBase
     {
         private readonly IUserService _userService;
-        private readonly IClassDbService _classDbService;
+        private readonly IClassService _classService;
         private readonly ITeacherSubjectDbService _teacherSubjectDbService;
         private readonly IStudentClassService _studentClassService;
         private readonly IJournalDbService _journalDbService;
 
-        public AdminController(IClassDbService classDbService,
+        public AdminController(IClassService classService,
             ITeacherSubjectDbService teacherSubjectDbService, IStudentClassService studentClassService,
             IJournalDbService journalDbService, IUserService userService)
         {
-            _classDbService = classDbService;
+            _classService = classService;
             _teacherSubjectDbService = teacherSubjectDbService;
             _studentClassService = studentClassService;
             _journalDbService = journalDbService;
@@ -89,7 +89,7 @@ namespace SchoolJournalApi.Controllers
         [HttpGet("get-classes-on-page")]
         public async Task<IActionResult> GetClassesOnPage(int pageSize, int? educationalLevel, int page = 1) 
         {
-            var classes = await _classDbService.GetClassesOnPageAsync(pageSize, educationalLevel, page);
+            var classes = await _classService.GetClassesOnPageAsync(pageSize, educationalLevel, page);
             if(classes.Items is null || !classes.Items.Any()) 
             {
                 return NotFound();
@@ -97,37 +97,27 @@ namespace SchoolJournalApi.Controllers
             return Ok(classes);
         }
         [HttpPost("add-class")]
-        public async Task<IActionResult> AddClass(ClassCreationDto? dto) 
+        public async Task<IActionResult> AddClass(ClassCreationDto dto) 
         {
-            if (!ModelState.IsValid || dto is null)
-            {
-                return BadRequest(ModelState);
-            }
-            await _classDbService.AddClassAsync(dto);
+            await _classService.AddClassAsync(dto);
             return Ok();
         }
         [HttpPut("update-class")]
         public async Task<IActionResult> UpdateClass(ClassDto dto) 
         {
-            await _classDbService.UpdateClassAsync(dto);
+            await _classService.UpdateClassAsync(dto);
             return Ok();
         }
         [HttpDelete("delete-class")]
         public async Task<IActionResult> DeleteClass(int id) 
         {
-            await _classDbService.DeleteClassAsync(id);
+            await _classService.DeleteClassAsync(id);
             return Ok();
-        }
-        [HttpGet("get-classes")]
-        public async Task<IActionResult> GetClasses() 
-        {
-            var classes = await _classDbService.GetClassesAsync();
-            return Ok(classes);
         }
         [HttpGet("get-class-details")]
         public async Task<IActionResult> GetClassDetails(int id) 
         {
-            var dto = await _classDbService.GetClassDtoAsync(id);
+            var dto = await _classService.GetClassDtoAsync(id);
             return Ok(dto);
         }
         //TeacherSubject----------------------------------------------------------------------------------------------------------
