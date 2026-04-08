@@ -20,7 +20,7 @@ namespace SchoolJournalApi.Services.DbServices
                 if((dto.AttendanceId == (int)Attendances.Absent || dto.AttendanceId == (int)Attendances.AbsentWithReason)
                     && dto.MarkId is not null)
                 {
-                    throw new EntityHasBusinessLogicConflictException("Student can't be absent and recieve a mark!");
+                    throw new BusinessLogicException("Student can't be absent and recieve a mark!");
                 }
                 Progress progress = new Progress();
                 progress.UserId = dto.UserId;
@@ -43,7 +43,7 @@ namespace SchoolJournalApi.Services.DbServices
                 if ((dto.AttendanceId == (int)Attendances.Absent || dto.AttendanceId == (int)Attendances.AbsentWithReason)
                     && dto.MarkId is not null)
                 {
-                    throw new EntityHasBusinessLogicConflictException("Student can't be absent and recieve a mark!");
+                    throw new BusinessLogicException("Student can't be absent and recieve a mark!");
                 }
                 var progress = await _db.Progresses.FindAsync(dto.Id);
                 if(progress is null)

@@ -4,91 +4,81 @@ using SchoolJournalApi.Enum_s;
 using SchoolJournalApi.Exceptions;
 using SchoolJournalApi.Models;
 using SchoolJournalApi.Services.DbServices.Interfaces;
+using System.Data.Common;
 
 namespace SchoolJournalApi.Services.DbServices
 {
-    public class TeacherSubjectDbService : DbService<TeacherSubject>, ITeacherSubjectDbService
+    public class TeacherSubjectDbService : DbService, ITeacherSubjectDbService
     {
         public TeacherSubjectDbService(SchoolJournalDbContext db) : base(db) { } 
 
-        public async Task AddTeacherSubjectAsync(int userId, int subjectId)
-        {
-            var isUserTeacher = await _db.Users.AnyAsync(u => u.Id == userId 
-                && u.StatusId == (int)UserStatuses.Teacher);
-            if (!isUserTeacher) {
-                throw new EntityHasStatusDiscrepancyException("User is not a teacher and can't be assosiated with a subject!");
-            }
-            var newTS = new TeacherSubject
-            {
-                SubjectId = subjectId,
-                UserId = userId
-            };
-            _db.Add(newTS);
-            await _db.SaveChangesAsync();
-        }
-
-        public async Task DeleteTeacherSubjectAsync(int teacherSubjectId)
+        public async Task<bool> IsTeacherAsync(int userId) 
         {
             try
             {
-                var ts = await _db.TeacherSubjects.FindAsync(teacherSubjectId);
-                if (ts == null) 
-                {
-                    throw new EntityNotFoundException("Teacher SUbject");
-                }
-                _db.Remove(ts);
+                return await _db.Users.AnyAsync(u => u.StatusId == (int)UserStatuses.Teacher && u.Id == userId);
+            }
+            catch (DbException ex)
+            {
+                throw new EfDbException("An error has occur while reading data from DB!", ex);
+            }   
+        }
+        public async Task<TeacherSubject?> FindTeacherSubjectAsync(int teacherSubjectId) 
+        {
+            try
+            {
+                return await _db.TeacherSubjects.FindAsync(teacherSubjectId);
+            }
+            catch (DbException ex) 
+            {
+                throw new EfDbException("An error has occur while reading data from DB!", ex);
+            }
+        }
+        public async Task DeleteTeacherSubjectAsync(TeacherSubject teacherSubject) 
+        {
+            try
+            {
+                _db.Remove(teacherSubject);
                 await _db.SaveChangesAsync();
             }
             catch (DbUpdateException ex) 
             {
-                throw new EntityInUseException($"Entity Teacher-Subject with Id: {teacherSubjectId} is already in use and can't be deleted", ex);
+                throw new EntityInUseException($"Entity TeacherSubject with Id: {teacherSubject.Id} is in use and can't be deleted!", ex);
             }
         }
-        public async Task<List<TeacherSubjectsDto>> GetAllTeacherSubjectsAsync(int? eduLevelId)
+        public async Task AddTeacherSubjectAsync(TeacherSubject teacherSubject) 
         {
-            var list = _db.TeacherSubjects
-                .Include(t => t.Subject)
-                .Include(t => t.Teacher).AsNoTracking();
-            if (eduLevelId is not null) 
+            try
             {
-
-                list = list.Where(ts => ts.Subject!.EducationalLevelId == eduLevelId);
+                _db.Add(teacherSubject);
+                await _db.SaveChangesAsync();
             }
-            return await list.Select(t => new TeacherSubjectsDto 
+            catch (DbUpdateException ex) 
             {
-                Id = t.Id,
-                SubjectTitle = t.Subject!.Title,
-                TeacherFirstName = t.Teacher!.FirstName,
-                TeacherLastName = t.Teacher.LastName,
-                TeacherMiddleName = t.Teacher.MiddleName
-            }).ToListAsync();
+                throw new EntityAddingException("An error has occue while adding entity TeacherSubject!", ex);
+            }           
         }
-        public async Task<List<SubjectDto>> GetSubjectsAsync(int? educationalLevelId)
+        public IQueryable<TeacherSubject> GetTeacherSubjectsForTeacher(int userId) 
+        {
+            return _db.TeacherSubjects.Where(x => x.UserId == userId).AsNoTracking();
+        }
+        public IQueryable<Subject> GetSubjects(int? educationalLevelId) 
         {
             var subjects = _db.Subjects.AsNoTracking();
-            if(educationalLevelId is not null) 
+            if (educationalLevelId is not null)
             {
                 subjects = subjects.Where(s => s.EducationalLevelId == educationalLevelId);
             }
-            return await subjects.Select(s => new SubjectDto
-            {
-                Id = s.Id,
-                Title = s.Title,
-                EducationalLevelId = s.EducationalLevelId
-            }).ToListAsync();
+            return subjects;
         }
-
-        public async Task<List<TeacherSubjectsDto>> GetSubjectsForTeacherAsync(int userId)
+        public IQueryable<TeacherSubject> GetTeacherSubjects(int? educationalLevelId) 
         {
-            var tsForTeacher = _db.TeacherSubjects.Where(s => s.UserId == userId).AsNoTracking();
-            return await tsForTeacher.Select(t => new TeacherSubjectsDto
+            var teacherSubjects = _db.TeacherSubjects.AsNoTracking();
+            if (educationalLevelId is not null)
             {
-                Id = t.Id,
-                SubjectEducationalLevelId = t.Subject!.EducationalLevelId,
-                SubjectId = t.SubjectId,
-                SubjectTitle = t.Subject!.Title,
-                TeacherId = t.UserId
-            }).ToListAsync();
+                teacherSubjects = teacherSubjects.Where(ts => ts.Subject!.EducationalLevelId == educationalLevelId);
+            }
+            return teacherSubjects;
         }
     }
 }

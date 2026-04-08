@@ -96,7 +96,7 @@ namespace SchoolJournalApi.Services.DbServices
                 if (await _db.StudentClasses.AnyAsync(s => s.UserId == userId && s.IsActive))
                 {
                     await transaction.RollbackAsync();
-                    throw new EntityHasBusinessLogicConflictException("Student already associated with another class.");
+                    throw new BusinessLogicException("Student already associated with another class.");
                 }
                 var newStudentClass = new StudentClass();
                 newStudentClass.ClassId = classId;

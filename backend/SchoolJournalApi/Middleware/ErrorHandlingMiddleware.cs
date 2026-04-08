@@ -69,7 +69,7 @@ namespace SchoolJournalApi.Middleware
                     errorCode = "ENTITY_ALREADY_EXISTS_ERROR";
                     errorMessage = ex.Message;
                     break;
-                case EntityHasBusinessLogicConflictException:
+                case BusinessLogicException:
                     code = HttpStatusCode.Conflict;
                     errorCode = "ENTITY_LOGIC_CONFLICT_ERROR";
                     errorMessage = ex.Message;

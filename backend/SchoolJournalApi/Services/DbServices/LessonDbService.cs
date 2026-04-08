@@ -18,9 +18,9 @@ namespace SchoolJournalApi.Services.DbServices
                 if (journal is null)
                     throw new EntityNotFoundException("Journal of Lesson");
                 if (!IsLessonDateValidToJournalYear(journal.Year, (DateOnly)lessonDto.LessonDate!))
-                    throw new EntityHasBusinessLogicConflictException("Lesson date is out of range of Journal's year.");
+                    throw new BusinessLogicException("Lesson date is out of range of Journal's year.");
                 if (notNullDate.DayOfWeek == DayOfWeek.Sunday || notNullDate.DayOfWeek == DayOfWeek.Saturday)
-                    throw new EntityHasBusinessLogicConflictException("Lessons can't be on weekends");
+                    throw new BusinessLogicException("Lessons can't be on weekends");
                 Lesson newLesson = new Lesson();
                 newLesson.JournalId = lessonDto.JournalId;
                 newLesson.LessonDate = (DateOnly)lessonDto.LessonDate!;
@@ -42,7 +42,7 @@ namespace SchoolJournalApi.Services.DbServices
             }
             if(lesson.LessonDate <= DateOnly.FromDateTime(DateTime.Now))
             {
-                throw new EntityHasBusinessLogicConflictException("Cannot delete lesson after it is being teached");
+                throw new BusinessLogicException("Cannot delete lesson after it is being teached");
             }
             lesson.IsDeleted = true;
             await _db.SaveChangesAsync();

@@ -16,16 +16,16 @@ namespace SchoolJournalApi.Controllers
     {
         private readonly IUserService _userService;
         private readonly IClassService _classService;
-        private readonly ITeacherSubjectDbService _teacherSubjectDbService;
+        private readonly ITeacherSubjectService _teacherSubjectService;
         private readonly IStudentClassService _studentClassService;
         private readonly IJournalDbService _journalDbService;
 
         public AdminController(IClassService classService,
-            ITeacherSubjectDbService teacherSubjectDbService, IStudentClassService studentClassService,
+            ITeacherSubjectService teacherSubjectService, IStudentClassService studentClassService,
             IJournalDbService journalDbService, IUserService userService)
         {
             _classService = classService;
-            _teacherSubjectDbService = teacherSubjectDbService;
+            _teacherSubjectService = teacherSubjectService;
             _studentClassService = studentClassService;
             _journalDbService = journalDbService;
             _userService = userService;
@@ -124,7 +124,7 @@ namespace SchoolJournalApi.Controllers
         [HttpGet("get-subjects")]
         public async Task<IActionResult> GetSubjects(int? eduLevelId) 
         {
-            var subjects = await _teacherSubjectDbService.GetSubjectsAsync(eduLevelId);
+            var subjects = await _teacherSubjectService.GetSubjectsAsync(eduLevelId);
             if (!subjects.Any()) 
             {  
                 return NotFound(); 
@@ -134,7 +134,7 @@ namespace SchoolJournalApi.Controllers
         [HttpGet("get-teacher-subject")]
         public async Task<IActionResult> GetTeacherSubjectForTeacher(int id)
         {
-            var subjects = await _teacherSubjectDbService.GetSubjectsForTeacherAsync(id);
+            var subjects = await _teacherSubjectService.GetSubjectsForTeacherAsync(id);
             if (!subjects.Any())
             {
                 return NotFound();
@@ -144,19 +144,19 @@ namespace SchoolJournalApi.Controllers
         [HttpDelete("delete-teacher-subject")]
         public async Task<IActionResult> DeleteTeacherSubject(int id) 
         {
-            await _teacherSubjectDbService.DeleteTeacherSubjectAsync(id);
+            await _teacherSubjectService.DeleteTeacherSubjectAsync(id);
             return Ok();
         }
         [HttpPost("add-teacher-subject")]
         public async Task<IActionResult> AddTeacherSubject(NewTeacherSubjectDto dto) 
         {
-            await _teacherSubjectDbService.AddTeacherSubjectAsync(dto.UserId, dto.SubjectId);
+            await _teacherSubjectService.AddTeacherSubjectAsync(dto.UserId, dto.SubjectId);
             return Ok();
         }
         [HttpGet("get-all-teachers-subjects")]
         public async Task<IActionResult> GetAllTeachersSubjects(int? eduLevelId) 
         {
-            var result = await _teacherSubjectDbService.GetAllTeacherSubjectsAsync(eduLevelId);
+            var result = await _teacherSubjectService.GetTeacherSubjectsAsync(eduLevelId);
             return Ok(result);
         }
         //Student-Class-----------------------------------------------------------------------------------------------------------

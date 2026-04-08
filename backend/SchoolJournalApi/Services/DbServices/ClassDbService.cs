@@ -1,13 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SchoolJournalApi.Dto_s;
-using SchoolJournalApi.Enum_s;
 using SchoolJournalApi.Exceptions;
 using SchoolJournalApi.Models;
 using SchoolJournalApi.Services.DbServices.Interfaces;
 
 namespace SchoolJournalApi.Services.DbServices
 {
-    public class ClassDbService : DbService<Class>, IClassDbService
+    public class ClassDbService : DbService, IClassDbService
     {
         public ClassDbService (SchoolJournalDbContext db) : base (db)
         {
