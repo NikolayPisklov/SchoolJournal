@@ -6,7 +6,7 @@ using SchoolJournalApi.Services.DbServices.Interfaces;
 
 namespace SchoolJournalApi.Services.DbServices
 {
-    public class LessonDbService : DbService<LessonDto>, ILessonDbService
+    public class LessonDbService : DbService, ILessonDbService
     {
         public LessonDbService(SchoolJournalDbContext db) : base(db) { }
         public async Task AddLessonAsync(AddLessonDto lessonDto)

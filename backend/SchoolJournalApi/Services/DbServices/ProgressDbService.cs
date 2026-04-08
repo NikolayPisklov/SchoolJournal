@@ -9,7 +9,7 @@ using System.Data.Common;
 
 namespace SchoolJournalApi.Services.DbServices
 {
-    public class ProgressDbService : DbService<JournalProgressDto>, IProgressDbService
+    public class ProgressDbService : DbService, IProgressDbService
     {
         public ProgressDbService(SchoolJournalDbContext db): base(db) { }
 

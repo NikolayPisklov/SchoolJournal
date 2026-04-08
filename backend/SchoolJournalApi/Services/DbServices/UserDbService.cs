@@ -8,7 +8,7 @@ using SchoolJournalApi.Services.DbServices.Interfaces;
 
 namespace SchoolJournalApi.Services.DbServices
 {
-    public class UserDbService : DbService<User>, IUsersDbService
+    public class UserDbService : DbService, IUsersDbService
     {
         public UserDbService(SchoolJournalDbContext db) : base(db) { _db = db; }
 

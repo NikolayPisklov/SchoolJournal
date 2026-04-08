@@ -169,7 +169,7 @@ namespace SchoolJournalApi.Controllers
         [HttpPost("transfer-student")]
         public async Task<IActionResult> TransferStudent(TransferStudentDto dto) 
         {
-            await _studentClassService.TransferStudentToAnotherCLassAsync(dto.StudentId, dto.NewClassId, dto.OldClassId);
+            await _studentClassService.TransferStudentToAnotherCLassAsync(dto.StudentId, dto.NewClassId);
             return Ok();
         }
         //Journals

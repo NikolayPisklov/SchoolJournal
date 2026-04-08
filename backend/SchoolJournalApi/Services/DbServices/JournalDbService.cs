@@ -11,7 +11,7 @@ using SchoolJournalApi.Services.DbServices.Interfaces;
 
 namespace SchoolJournalApi.Services.DbServices
 {
-    public class JournalDbService : DbService<Journal>, IJournalDbService
+    public class JournalDbService : DbService, IJournalDbService
     {
         public JournalDbService(SchoolJournalDbContext db) : base(db)
         {

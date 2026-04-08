@@ -65,11 +65,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IClassService, ClassService>();
 builder.Services.AddScoped<ITeacherSubjectService, TeacherSubjectService>();
+builder.Services.AddScoped<IStudentClassService, StudentClassService>();
 //Repos
 builder.Services.AddScoped<IUsersDbService, UserDbService>();
 builder.Services.AddScoped<IClassDbService, ClassDbService>();
 builder.Services.AddScoped<ITeacherSubjectDbService, TeacherSubjectDbService>();
-builder.Services.AddScoped<IStudentClassService, StudentClassService>();
+builder.Services.AddScoped<IStudentClassDbService, StudentClassDbService>();
 builder.Services.AddScoped<IJournalDbService, JournalDbService>();
 builder.Services.AddScoped<IProgressDbService, ProgressDbService>();
 builder.Services.AddScoped<ILessonDbService, LessonDbService>();
