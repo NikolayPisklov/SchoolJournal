@@ -1,5 +1,4 @@
-﻿using SchoolJournalApi.Dtos.Journal;
-using SchoolJournalApi.Models;
+﻿using SchoolJournalApi.Models;
 
 namespace SchoolJournalApi.Services.DbServices.Interfaces
 {

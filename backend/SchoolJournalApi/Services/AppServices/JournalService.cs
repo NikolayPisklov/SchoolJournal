@@ -8,7 +8,6 @@ using SchoolJournalApi.Models;
 using SchoolJournalApi.Services.AppServices.Interfaces;
 using SchoolJournalApi.Services.DbServices.Interfaces;
 using System.Data.Common;
-using System.Reflection.Metadata.Ecma335;
 
 namespace SchoolJournalApi.Services.AppServices
 {
