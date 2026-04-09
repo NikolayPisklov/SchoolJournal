@@ -15,12 +15,12 @@ namespace SchoolJournalApi.Controllers
     {
         private readonly IJournalService _journalService;
         private readonly IProgressDbService _progressDbService;
-        private readonly ILessonDbService _lessonDbService;
+        private readonly ILessonService _lessonService;
 
         public TeacherController(IJournalService journalService, IProgressDbService progressDbService,
-            ILessonDbService lessonDbService) 
+            ILessonService lessonService) 
         {
-            _lessonDbService = lessonDbService;
+            _lessonService = lessonService;
             _journalService = journalService;
             _progressDbService = progressDbService;
         }
@@ -98,19 +98,19 @@ namespace SchoolJournalApi.Controllers
         [HttpPost("add-lesson")]
         public async Task<IActionResult> AddLessonToJournal(AddLessonDto addLessonDto)
         {
-            await _lessonDbService.AddLessonAsync(addLessonDto);
+            await _lessonService.AddLessonAsync(addLessonDto);
             return Ok();
         }
         [HttpGet("get-lessons-for-journal")]
         public async Task<IActionResult> GetLessonsForJournal(int journalId, int month, int journalYear)
         {
-            var lessons = await _lessonDbService.GetLessonsForJournal(journalId, month, journalYear);
+            var lessons = await _lessonService.GetLessonsForJournalAsync(journalId, month, journalYear);
             return Ok(lessons);
         }
         [HttpPatch("{lessonId}")]
         public async Task<IActionResult> UpdateLessonDetails(int lessonId, LessonDetailsUpdateDto dto)
         {
-            await _lessonDbService.UpdateLessonDetailsAsync(lessonId, dto);
+            await _lessonService.UpdateLessonDetailsAsync(lessonId, dto);
             return Ok();
         }
         [HttpGet("get-student-statictic")]
