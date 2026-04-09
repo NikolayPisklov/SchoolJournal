@@ -1,13 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SchoolJournalApi.Models;
 using SchoolJournalApi.Exceptions;
-using SchoolJournalApi.Dtos;
 using SchoolJournalApi.Dtos.User;
 using SchoolJournalApi.Dtos.Progress;
 using SchoolJournalApi.Dtos.Journal;
 using SchoolJournalApi.Dtos.Lesson;
-using SchoolJournalApi.Enum_s;
 using SchoolJournalApi.Services.DbServices.Interfaces;
+using System.Data.Common;
 
 namespace SchoolJournalApi.Services.DbServices
 {
@@ -16,21 +15,23 @@ namespace SchoolJournalApi.Services.DbServices
         public JournalDbService(SchoolJournalDbContext db) : base(db)
         {
         }
-        public async Task AddJournalAsync(JournalCreationDto dto)
+        public async Task<bool> IsThereSameJournal(int classId, int teacherSubjectId, int year) 
         {
             try
             {
-                var isThereSameJournal = await _db.Journals.AnyAsync(j=> j.ClassId == dto.ClassId 
-                    && j.TeacherSubjectId == dto.TeacherSubjectId && j.Year == DateTime.Now.Year);
-                if (isThereSameJournal) 
-                {
-                    throw new EntityAlreadyExistsException("Journal for that class of that subject and year already exists!");
-                }
-                var newJournal = new Journal();
-                newJournal.ClassId = dto.ClassId;
-                newJournal.TeacherSubjectId = dto.TeacherSubjectId;
-                newJournal.Year = DateTime.Now.Year;
-                await _db.AddAsync(newJournal);
+                return await _db.Journals.AnyAsync(j => j.ClassId == classId
+                    && j.TeacherSubjectId == teacherSubjectId && j.Year == year);
+            }
+            catch (DbException ex) 
+            {
+                throw new EntityAddingException("An error has occurred while reading data from DB!", ex);
+            }
+        }
+        public async Task AddJournalAsync(Journal journal)
+        {
+            try
+            {
+                _db.Add(journal);
                 await _db.SaveChangesAsync();
             }
             catch (DbUpdateException ex) 
@@ -38,73 +39,87 @@ namespace SchoolJournalApi.Services.DbServices
                 throw new EntityAddingException("An error has occurred while adding a Journal entity!", ex);
             }
         }
-
-        public async Task DeleteJournalAsync(int journalId)
+        public async Task<Journal?> FindJournalAsync(int journalId)
         {
             try
             {
                 var journal = await _db.Journals.FindAsync(journalId);
-                if (journal is null)
-                {
-                    throw new EntityNotFoundException("Journal");
-                }
+                return journal;
+            }
+            catch (DbException ex)
+            {
+                throw new EntityAddingException("An error has occurred while reading data from DB!", ex);
+            }
+        }
+        public async Task<Journal?> FindJournalWithIncludes(int journalId) 
+        {
+            try
+            {
+                var journal = await _db.Journals.Include(j => j.Class).Include(j => j.TeacherSubject)
+                    .ThenInclude(ts => ts.Subject).FirstOrDefaultAsync(j => j.Id == journalId);
+                return journal;
+            }
+            catch (DbException ex)
+            {
+                throw new EntityAddingException("An error has occurred while reading data from DB!", ex);
+            }
+        }
+        public async Task<StudentClass?> FindStudentClassAsync(int studentId) 
+        {
+            try
+            {
+                var studentClass = await _db.StudentClasses.FirstOrDefaultAsync(sc => sc.IsActive 
+                    && sc.UserId == studentId);
+                return studentClass;
+            }
+            catch (DbException ex)
+            {
+                throw new EntityAddingException("An error has occurred while reading data from DB!", ex);
+            }
+        }
+        public async Task DeleteJournalAsync(Journal journal)
+        {
+            try
+            {
                 _db.Remove(journal);
                 await _db.SaveChangesAsync();
             }
-            catch (DbUpdateException ex) 
+            catch (DbUpdateException ex)
             {
-                throw new EntityInUseException($"Entity Journal with Id: {journalId} is in use and can't be deleted!", ex);
+                throw new EntityInUseException($"Entity Journal with Id: {journal.Id} is in use and can't be deleted!", ex);
             }
         }
-
-        public async Task<JournalDetailsDto> GetJournalDetailsAsync(int journalId)
+        public IQueryable<StudentClass> GetStudentsForJournal(int journalId) 
         {
-            var journalDto = new JournalDetailsDto();
-            var journal = await _db.Journals.FindAsync(journalId);
-            if (journal is null)
-                throw new EntityNotFoundException("Journal");
-            var students = await _db.StudentClasses.AsNoTracking()
-                .Where(sc => sc.ClassId == journal.ClassId)
-                .Select(sc => new ListedStudentDto 
-                { 
-                    Id = sc.Student!.Id,
-                    FirstName = sc.Student.FirstName,
-                    LastName = sc.Student.LastName,
-                    MiddleName = sc.Student.MiddleName
-                }).ToListAsync();
-            var start = new DateOnly(journal.Year, 9, 1);
-            var end = start.AddMonths(1);
-            var lessons = await _db.Lessons.AsNoTracking()
-                .Where(l => l.JournalId == journalId && l.LessonDate >= start 
-                    && l.LessonDate < end && l.IsDeleted == false)
-                .OrderBy(l => l.LessonDate)
-                .Select(l => new LessonDto
-                {
-                    Id = l.Id,
-                    JournalId = l.JournalId,
-                    LessonDate = l.LessonDate,
-                    Theme = l.Theme,
-                    Homework = l.Homework,
-                }).ToListAsync();
-            var progresses = await _db.Progresses.AsNoTracking()
-                .Where(prog => prog.Lesson.JournalId == journalId
-                    && prog.IsUpdated == false)
-                .Select(p => new JournalProgressDto
-                {
-                    Id = p.Id,
-                    UserId = p.UserId,
-                    LessonId = p.LessonId,
-                    MarkValue = p.Mark == null ? null : p.Mark.Value,
-                    AttendanceValue = p.Attendance!.Value,
-                    ProgressUpdateTime = p.ProgressUpdateDate
-                }).ToListAsync();
-            journalDto.Students = students;
-            journalDto.Lessons = lessons;
-            journalDto.Progresses = progresses;
-            journalDto.JournalYear = journal.Year;
-            return journalDto;
+            return _db.StudentClasses.AsNoTracking()
+                .Where(sc => sc.ClassId == journalId);            
         }
-
+        public IQueryable<Lesson> GetLessonsForJournal(int journalId, int journalYear) 
+        {
+            var start = new DateOnly(journalYear, 9, 1);
+            var end = start.AddMonths(1);
+            return _db.Lessons.AsNoTracking()
+                .Where(l => l.JournalId == journalId && l.LessonDate >= start
+                    && l.LessonDate < end && l.IsDeleted == false)
+                .OrderBy(l => l.LessonDate);
+        }
+        public IQueryable<Progress> GetProgressesForJournal(int journalId) 
+        {
+            return _db.Progresses.AsNoTracking()
+            .Where(prog => prog.Lesson.JournalId == journalId
+                && prog.IsUpdated == false);
+        }
+        public IQueryable<Journal> GetJournalsForClass(int classId) 
+        {
+            return _db.Journals.AsNoTracking()
+                .Where(j => j.ClassId == classId);
+        }
+        public IQueryable<Journal> GetJournalsForTeacher(int teacherId) 
+        {
+            return _db.Journals.AsNoTracking()
+                .Where(j => j.TeacherSubject.Teacher.Id == teacherId);
+        }
+        //======================================================
         public async Task<JournalDetailsDto> GetJournalDetailsForStudent(int journalId, int studentId)
         {
             var journalDto = new JournalDetailsDto();

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SchoolJournalApi.Services.AppServices.Interfaces;
 using SchoolJournalApi.Services.DbServices.Interfaces;
 
 namespace SchoolJournalApi.Controllers
@@ -9,10 +10,10 @@ namespace SchoolJournalApi.Controllers
     [Authorize]
     public class JournalCommonController : ControllerBase
     {
-        private readonly IJournalDbService _journalDbService;
+        private readonly IJournalService _journalDbService;
         private readonly IProgressDbService _progressDbService;
 
-        public JournalCommonController(IJournalDbService journalDbService, IProgressDbService progressDbService) 
+        public JournalCommonController(IJournalService journalDbService, IProgressDbService progressDbService) 
         {
             _journalDbService = journalDbService;
             _progressDbService = progressDbService;

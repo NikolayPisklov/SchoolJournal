@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SchoolJournalApi.Dtos.Lesson;
 using SchoolJournalApi.Dtos.Progress;
 using SchoolJournalApi.Enum_s;
+using SchoolJournalApi.Services.AppServices.Interfaces;
 using SchoolJournalApi.Services.DbServices.Interfaces;
 
 namespace SchoolJournalApi.Controllers
@@ -12,21 +13,22 @@ namespace SchoolJournalApi.Controllers
     [Authorize(Roles = $"{UserStatusesNames.Teacher}, {UserStatusesNames.Admin}")]
     public class TeacherController : ControllerBase
     {
-        private readonly IJournalDbService _journalDbService;
+        private readonly IJournalService _journalService;
         private readonly IProgressDbService _progressDbService;
         private readonly ILessonDbService _lessonDbService;
 
-        public TeacherController(IJournalDbService journalDbService, IProgressDbService progressDbService, ILessonDbService lessonDbService) 
+        public TeacherController(IJournalService journalService, IProgressDbService progressDbService,
+            ILessonDbService lessonDbService) 
         {
             _lessonDbService = lessonDbService;
-            _journalDbService = journalDbService;
+            _journalService = journalService;
             _progressDbService = progressDbService;
         }
 
         [HttpGet("get-journals-for-teacher")]
         public async Task<IActionResult> GetJournalsForTeacher(int teacherId)
         {
-            var journals = await _journalDbService.GetJournalsForTeacherAsync(teacherId);
+            var journals = await _journalService.GetJournalsForTeacherAsync(teacherId);
             if (journals.Count == 0)
             {
                 return NotFound();
@@ -36,13 +38,13 @@ namespace SchoolJournalApi.Controllers
         [HttpGet("get-journal-title")]
         public async Task<IActionResult> GetJournalTitle(int journalId)
         {
-            var journalTitleDto = await _journalDbService.GetJournalTitleAsync(journalId);
+            var journalTitleDto = await _journalService.GetJournalTitleAsync(journalId);
             return Ok(journalTitleDto);
         }
         [HttpGet("get-journal-details")]
         public async Task<IActionResult> GetJournalDetails(int journalId)
         {
-            var journalDto = await _journalDbService.GetJournalDetailsAsync(journalId);
+            var journalDto = await _journalService.GetJournalDetailsAsync(journalId);
             return Ok(journalDto);
         }
         [HttpGet("get-all-marks")]

@@ -18,16 +18,16 @@ namespace SchoolJournalApi.Controllers
         private readonly IClassService _classService;
         private readonly ITeacherSubjectService _teacherSubjectService;
         private readonly IStudentClassService _studentClassService;
-        private readonly IJournalDbService _journalDbService;
+        private readonly IJournalService _journalService;
 
         public AdminController(IClassService classService,
             ITeacherSubjectService teacherSubjectService, IStudentClassService studentClassService,
-            IJournalDbService journalDbService, IUserService userService)
+            IJournalService journalService, IUserService userService)
         {
             _classService = classService;
             _teacherSubjectService = teacherSubjectService;
             _studentClassService = studentClassService;
-            _journalDbService = journalDbService;
+            _journalService = journalService;
             _userService = userService;
         }
         [HttpGet("get-users-on-page")]
@@ -176,7 +176,7 @@ namespace SchoolJournalApi.Controllers
         [HttpGet("get-journals-for-class")]
         public async Task<IActionResult> GetJournalsForClass(int classId)
         {
-            var journals = await _journalDbService.GetJournalsForClassAsync(classId);
+            var journals = await _journalService.GetJournalsForClassAsync(classId);
             if (journals.Count == 0) 
             {
                 return NotFound();
@@ -186,13 +186,13 @@ namespace SchoolJournalApi.Controllers
         [HttpPost("add-journal")]
         public async Task<IActionResult> AddJournalToClass(JournalCreationDto dto) 
         {
-            await _journalDbService.AddJournalAsync(dto);
+            await _journalService.AddJournalAsync(dto);
             return Ok();
         }
         [HttpDelete("delete-journal")]
         public async Task<IActionResult> DeleteJournal(int journalId) 
         {
-            await _journalDbService.DeleteJournalAsync(journalId);
+            await _journalService.DeleteJournalAsync(journalId);
             return Ok();
         }
     }

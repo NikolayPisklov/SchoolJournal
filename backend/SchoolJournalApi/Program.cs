@@ -66,6 +66,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IClassService, ClassService>();
 builder.Services.AddScoped<ITeacherSubjectService, TeacherSubjectService>();
 builder.Services.AddScoped<IStudentClassService, StudentClassService>();
+builder.Services.AddScoped<IJournalService, JournalService>();
 //Repos
 builder.Services.AddScoped<IUsersDbService, UserDbService>();
 builder.Services.AddScoped<IClassDbService, ClassDbService>();
