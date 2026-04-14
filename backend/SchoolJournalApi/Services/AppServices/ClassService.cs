@@ -5,32 +5,41 @@ using SchoolJournalApi.Exceptions;
 using SchoolJournalApi.Models;
 using SchoolJournalApi.Services.AppServices.Interfaces;
 using SchoolJournalApi.Services.DbServices.Interfaces;
-using System.Formats.Asn1;
 
 namespace SchoolJournalApi.Services.AppServices
 {
     public class ClassService : IClassService
     {
         private readonly IClassDbService _classDbService;
+        private readonly IContextService _contextService;
 
 
-        public ClassService(IClassDbService classDbService) 
+        public ClassService(IClassDbService classDbService, ContextService unitOfWork) 
         {
+            _contextService = unitOfWork;
             _classDbService = classDbService;
         }
 
 
         public async Task AddClassAsync(ClassCreationDto classDto)
         {
-            int number = DateTime.Now.Year - (int)classDto.Year!;
-            int eduLevel = GetEducationalLevel(number);
-            Class newClass = new Class
+            try
             {
-                Title = classDto.Title,
-                Year = (int)classDto.Year,
-                EducationalLevelId = eduLevel
-            };
-            await _classDbService.AddClassAsync(newClass);
+                int number = DateTime.Now.Year - (int)classDto.Year!;
+                int eduLevel = GetEducationalLevel(number);
+                Class newClass = new Class
+                {
+                    Title = classDto.Title,
+                    Year = (int)classDto.Year,
+                    EducationalLevelId = eduLevel
+                };
+                _classDbService.AddClass(newClass);
+                await _contextService.SaveChangesAsync();
+            }
+            catch (EfDbException ex) 
+            {
+                throw new EntityAddingException("An error has occured while adding class to DB.", ex);
+            }          
         }
         public async Task UpdateClassAsync(ClassDto classDto)
         {
@@ -45,7 +54,7 @@ namespace SchoolJournalApi.Services.AppServices
             classEntity.Title = classDto.Title;
             classEntity.Year = (int)classDto.Year!;
             classDto.EducationalLevelId = eduLevel;
-            await _classDbService.SaveChangesAsync();
+            await _contextService.SaveChangesAsync();
         }
         public async Task DeleteClassAsync(int classId)
         {
@@ -54,7 +63,8 @@ namespace SchoolJournalApi.Services.AppServices
             {
                 throw new EntityNotFoundException("Entity Class can't be found!");
             }
-            await _classDbService.DeleteClassAsync(classEntity);
+            _classDbService.DeleteClass(classEntity);
+            await _contextService.SaveChangesAsync();
         }
         public async Task<ClassDto> GetClassDtoAsync(int classId)
         {

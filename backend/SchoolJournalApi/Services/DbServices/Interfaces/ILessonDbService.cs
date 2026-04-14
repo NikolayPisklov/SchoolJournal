@@ -5,10 +5,9 @@ namespace SchoolJournalApi.Services.DbServices.Interfaces
 {
     public interface ILessonDbService
     {
-        Task AddLessonAsync(Lesson lesson);
+        void AddLesson(Lesson lesson);
         Task<Lesson?> FindLessonAsync(int lessonId);
-        Task DeleteLessonAsync(Lesson lesson);
+        void DeleteLesson(Lesson lesson);
         IQueryable<Lesson> GetLessonsForJournal(int journalId, int month, int journalYear);
-        Task SaveChangesAsync();
     }
 }

@@ -14,15 +14,15 @@ namespace SchoolJournalApi.Controllers
     public class TeacherController : ControllerBase
     {
         private readonly IJournalService _journalService;
-        private readonly IProgressDbService _progressDbService;
+        private readonly IProgressService _progressService;
         private readonly ILessonService _lessonService;
 
-        public TeacherController(IJournalService journalService, IProgressDbService progressDbService,
+        public TeacherController(IJournalService journalService, IProgressService progressService,
             ILessonService lessonService) 
         {
             _lessonService = lessonService;
             _journalService = journalService;
-            _progressDbService = progressDbService;
+            _progressService = progressService;
         }
 
         [HttpGet("get-journals-for-teacher")]
@@ -50,7 +50,7 @@ namespace SchoolJournalApi.Controllers
         [HttpGet("get-all-marks")]
         public async Task<IActionResult> GetAllMarks()
         {
-            var marks = await _progressDbService.GetAllMarksAsync();
+            var marks = await _progressService.GetAllMarksAsync();
             if (marks.Count == 0) 
             {
                 return NotFound();
@@ -60,7 +60,7 @@ namespace SchoolJournalApi.Controllers
         [HttpGet("get-all-attendances")]
         public async Task<IActionResult> GetAllAttendances() 
         {
-            var att = await _progressDbService.GetAllAttendancesAsync();
+            var att = await _progressService.GetAllAttendancesAsync();
             if (att.Count == 0)
             {
                 return NotFound();
@@ -70,19 +70,19 @@ namespace SchoolJournalApi.Controllers
         [HttpPost("add-progress")]
         public async Task<IActionResult> AddProgress(AddProgressDto dto)
         {
-            await _progressDbService.AddProgressAsync(dto);
+            await _progressService.AddProgressAsync(dto);
             return Ok();
         }
         [HttpPut("update-progress")]
         public async Task<IActionResult> UpdateProgress(ProgressDto dto) 
         {
-            await _progressDbService.UpdateProgressAsync(dto);
+            await _progressService.UpdateProgressAsync(dto);
             return Ok();
         }
         [HttpGet("get-progresses-of-journal")]
         public async Task<IActionResult> GetProgressOfJournal(int journalId) 
         {
-            var progresses = await _progressDbService.GetProgressesForJournalAsync(journalId);
+            var progresses = await _progressService.GetProgressesForJournalAsync(journalId);
             if(progresses.Count == 0) 
             { 
                 return NotFound(); 
@@ -92,7 +92,7 @@ namespace SchoolJournalApi.Controllers
         [HttpGet("get-progress-details")]
         public async Task<IActionResult> GetSelectedProgressInfo(int progressId) 
         {
-            var dto = await _progressDbService.GetProgressDetailsAsync(progressId);
+            var dto = await _progressService.GetProgressDetailsAsync(progressId);
             return Ok(dto);
         }
         [HttpPost("add-lesson")]
@@ -116,7 +116,7 @@ namespace SchoolJournalApi.Controllers
         [HttpGet("get-student-statictic")]
         public async Task<IActionResult> GetStudentStatistic(int studentId, int journalId)
         {
-            var result = await _progressDbService.GetStudentStatisticAsync(studentId, journalId);
+            var result = await _progressService.GetStudentStatisticAsync(studentId, journalId);
             return Ok(result);
         }
     }

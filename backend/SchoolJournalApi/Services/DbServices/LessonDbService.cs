@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SchoolJournalApi.Dtos.Lesson;
 using SchoolJournalApi.Exceptions;
 using SchoolJournalApi.Models;
 using SchoolJournalApi.Services.DbServices.Interfaces;
@@ -11,17 +10,9 @@ namespace SchoolJournalApi.Services.DbServices
     {
         public LessonDbService(SchoolJournalDbContext db) : base(db) { }
 
-        public async Task AddLessonAsync(Lesson lesson) 
+        public void AddLesson(Lesson lesson) 
         {
-            try
-            {
-                _db.Lessons.Add(lesson);
-                await _db.SaveChangesAsync();
-            }
-            catch(DbUpdateException ex) 
-            {
-                throw new EntityAddingException("An error has occur while adding lesson to DB!", ex);
-            }
+            _db.Lessons.Add(lesson);
         }
         public async Task<Lesson?> FindLessonAsync(int lessonId) 
         {
@@ -34,17 +25,9 @@ namespace SchoolJournalApi.Services.DbServices
                 throw new EfDbException("An error has occur while reading data!", ex);
             }
         }
-        public async Task DeleteLessonAsync(Lesson lesson) 
+        public void DeleteLesson(Lesson lesson) 
         {
-            try
-            {
-                _db.Lessons.Remove(lesson);
-                await _db.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex) 
-            {
-                throw new EntityInUseException($"Lesson with Id: {lesson.Id} is in use and can't be deleted", ex);
-            }
+            _db.Lessons.Remove(lesson);
         }
         public IQueryable<Lesson> GetLessonsForJournal(int journalId, int month, int journalYear) 
         {          

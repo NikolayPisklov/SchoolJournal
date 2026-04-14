@@ -14,11 +14,15 @@ namespace SchoolJournalApi.Services.AppServices
     public class JournalService : IJournalService
     {
         private readonly IJournalDbService _journalDbService;
+        private readonly IContextService _contextService;
 
-        public JournalService(IJournalDbService journalDbService)
+
+        public JournalService(IJournalDbService journalDbService, IContextService contextService)
         {
             _journalDbService = journalDbService;
+            _contextService = contextService;
         }
+
 
         public async Task AddJournalAsync(JournalCreationDto dto)
         {
@@ -30,9 +34,9 @@ namespace SchoolJournalApi.Services.AppServices
             newJournal.ClassId = dto.ClassId;
             newJournal.TeacherSubjectId = dto.TeacherSubjectId;
             newJournal.Year = DateTime.Now.Year;
-            
+            _journalDbService.AddJournal(newJournal);
+            await _contextService.SaveChangesAsync();
         }
-
         public async Task DeleteJournalAsync(int journalId)
         {
             var journal = await _journalDbService.FindJournalAsync(journalId);
@@ -40,9 +44,9 @@ namespace SchoolJournalApi.Services.AppServices
             {
                 throw new EntityNotFoundException($"Journal entity with Id: {journalId} is not found!");
             }
-            await _journalDbService.DeleteJournalAsync(journal);
+            _journalDbService.DeleteJournal(journal);
+            await _contextService.SaveChangesAsync();
         }
-
         public async Task<JournalDetailsDto> GetJournalDetailsAsync(int journalId)
         {
             var journal = await _journalDbService.FindJournalAsync(journalId);
@@ -89,7 +93,6 @@ namespace SchoolJournalApi.Services.AppServices
                 throw new EntityAddingException("An error has occurred while reading data from DB!", ex);
             }
         }
-
         public async Task<List<JournalInListDto>> GetJournalsForStudent(int studentId)
         {
             var studentClass = await _journalDbService.FindStudentClassAsync(studentId);
@@ -99,7 +102,6 @@ namespace SchoolJournalApi.Services.AppServices
             }
             return await GetJournalsForClassAsync(studentClass.ClassId);
         }
-
         public Task<List<JournalGroupDto>> GetJournalsForTeacherAsync(int teacherId)
         {
             try
@@ -135,7 +137,6 @@ namespace SchoolJournalApi.Services.AppServices
                 throw new EntityAddingException("An error has occurred while reading data from DB!", ex);
             }           
         }
-
         public async Task<JournalTitleDto> GetJournalTitleAsync(int journalId)
         {
             var journal = await _journalDbService.FindJournalWithIncludes(journalId);

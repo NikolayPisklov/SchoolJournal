@@ -11,44 +11,17 @@ namespace SchoolJournalApi.Services.DbServices
         {
           
         }
-        public async Task AddClassAsync(Class newClass)
+        public void AddClass(Class newClass)
         {
-            try
-            {
-                await _db.AddAsync(newClass);
-                await _db.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex) 
-            {
-                throw new EntityAddingException("An error has occurred while adding a Class entity!", ex);
-            }
+            _db.Add(newClass);
         }
         public async Task<Class?> FindClassAsync(int classId) 
         {
             return await _db.Classes.FindAsync(classId);
         }
-        public async Task DeleteClassAsync(Class classEntity)
+        public void DeleteClass(Class classEntity)
         {
-            try
-            {
-                _db.Remove(classEntity);
-                await _db.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex)
-            {
-                throw new EntityInUseException($"Entity Class with Id: {classEntity.Id} is in use and can't be deleted!", ex);
-            }
-        }
-        public async Task SaveChangesAsync()
-        {
-            try
-            {
-                await _db.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex)
-            {
-                throw new EntityUpdateException("An error has occurred while updating a Class entity!", ex);
-            }
+             _db.Remove(classEntity);
         }
         public IQueryable<Class> GetClasses() 
         {

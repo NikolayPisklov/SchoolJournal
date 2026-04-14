@@ -4,7 +4,6 @@ using SchoolJournalApi.Exceptions;
 using SchoolJournalApi.Models;
 using SchoolJournalApi.Services.AppServices.Interfaces;
 using SchoolJournalApi.Services.DbServices.Interfaces;
-using System.Collections.Generic;
 using System.Data.Common;
 
 namespace SchoolJournalApi.Services.AppServices
@@ -12,9 +11,12 @@ namespace SchoolJournalApi.Services.AppServices
     public class TeacherSubjectService : ITeacherSubjectService
     {
         private readonly ITeacherSubjectDbService _teacherSubjectDbService;
+        private readonly IContextService _contextService;
 
-        public TeacherSubjectService(ITeacherSubjectDbService teacherSubjectDbService) 
+
+        public TeacherSubjectService(ITeacherSubjectDbService teacherSubjectDbService, IContextService contextService) 
         {
+            _contextService = contextService;
             _teacherSubjectDbService = teacherSubjectDbService;
         }
 
@@ -29,7 +31,8 @@ namespace SchoolJournalApi.Services.AppServices
                 SubjectId = subjectId, 
                 UserId = userId
             };
-            await _teacherSubjectDbService.AddTeacherSubjectAsync(newTeacherSubject);
+            _teacherSubjectDbService.AddTeacherSubject(newTeacherSubject);
+            await _contextService.SaveChangesAsync();
         }
         public async Task DeleteTeacherSubjectAsync(int teacherSubjectId)
         {
@@ -38,7 +41,8 @@ namespace SchoolJournalApi.Services.AppServices
             {
                 throw new EntityNotFoundException($"Entity TeacherSubject with Id: {teacherSubjectId} can't be found!");
             }
-            await _teacherSubjectDbService.DeleteTeacherSubjectAsync(teacherSubject);
+            _teacherSubjectDbService.DeleteTeacherSubject(teacherSubject);
+            await _contextService.SaveChangesAsync();
         }
 
         public async Task<List<SubjectDto>> GetSubjectsAsync(int? educationalLevelId)

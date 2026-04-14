@@ -12,10 +12,12 @@ namespace SchoolJournalApi.Services.AppServices
     public class UserService : IUserService
     {
         private readonly IUsersDbService _dbService;
+        private readonly IContextService _contextService;
 
 
-        public UserService (IUsersDbService usersDbService)
+        public UserService (IUsersDbService usersDbService, IContextService contextService)
         {
+            _contextService = contextService;
             _dbService = usersDbService;
         }
 
@@ -32,7 +34,7 @@ namespace SchoolJournalApi.Services.AppServices
                 throw new EntityAlreadyExistsException($"Entity User with Login {dto.Login} is already exists!");
             }
             MapUserToUpdateDto(user, dto);
-            await _dbService.SaveChangesAsync();            
+            await _contextService.SaveChangesAsync();            
         }
         public async Task AddUserAsync(UserCreationDto dto) 
         {
@@ -42,7 +44,8 @@ namespace SchoolJournalApi.Services.AppServices
             }
             User user = new User();
             MapUserToCreationDto(user, dto);
-            await _dbService.AddUserAsync(user);
+            _dbService.AddUser(user);
+            await _contextService.SaveChangesAsync();
         }
         public async Task DeleteUserAsync(int userId) 
         {
@@ -51,7 +54,8 @@ namespace SchoolJournalApi.Services.AppServices
             {
                 throw new EntityNotFoundException($"User with Id: {userId} is not found!");
             }
-            await _dbService.DeleteUserAsync(user);
+            _dbService.DeleteUser(user);
+            await _contextService.SaveChangesAsync();
         }
         public async Task<List<StatusDto>> GetUserStatusesAsync() 
         {

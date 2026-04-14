@@ -6,9 +6,8 @@ namespace SchoolJournalApi.Services.DbServices.Interfaces
     public interface IStudentClassDbService
     {
         IQueryable<StudentClass> GetStudentClassForClass(int classId);
-        Task<IDbContextTransaction> BeginTransactionAsync();
         Task<StudentClass?> FindStudentClassAsync(int studentId);
-        Task AddStudentClassAsync(StudentClass studentClass);
+        void AddStudentClass(StudentClass studentClass);
         Task<bool> IsStudent(int userId);
     }
 }

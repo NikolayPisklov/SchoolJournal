@@ -23,17 +23,9 @@ namespace SchoolJournalApi.Services.DbServices
                 throw new EntityAddingException("An error has occurred while reading data from DB!", ex);
             }
         }
-        public async Task AddJournalAsync(Journal journal)
+        public void AddJournal(Journal journal)
         {
-            try
-            {
-                _db.Add(journal);
-                await _db.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex) 
-            {
-                throw new EntityAddingException("An error has occurred while adding a Journal entity!", ex);
-            }
+            _db.Add(journal);
         }
         public async Task<Journal?> FindJournalAsync(int journalId)
         {
@@ -73,17 +65,9 @@ namespace SchoolJournalApi.Services.DbServices
                 throw new EntityAddingException("An error has occurred while reading data from DB!", ex);
             }
         }
-        public async Task DeleteJournalAsync(Journal journal)
+        public void DeleteJournal(Journal journal)
         {
-            try
-            {
-                _db.Remove(journal);
-                await _db.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex)
-            {
-                throw new EntityInUseException($"Entity Journal with Id: {journal.Id} is in use and can't be deleted!", ex);
-            }
+             _db.Remove(journal);
         }
         public IQueryable<StudentClass> GetStudentsForJournal(int journalId) 
         {

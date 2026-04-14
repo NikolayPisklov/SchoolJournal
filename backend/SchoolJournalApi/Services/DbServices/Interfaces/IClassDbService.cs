@@ -4,10 +4,9 @@ namespace SchoolJournalApi.Services.DbServices.Interfaces
 {
     public interface IClassDbService
     {
-        Task AddClassAsync(Class newClass);
+        void AddClass(Class newClass);
         Task<Class?> FindClassAsync(int classId);
-        Task SaveChangesAsync();
-        Task DeleteClassAsync(Class classEntity);
+        void DeleteClass(Class classEntity);
         IQueryable<Class> GetClasses();
     }
 }

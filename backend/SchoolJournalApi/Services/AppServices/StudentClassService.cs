@@ -11,10 +11,13 @@ namespace SchoolJournalApi.Services.AppServices
     public class StudentClassService : IStudentClassService
     {
         private readonly IStudentClassDbService _studentClassDbService;
+        private readonly IContextService _contextService;
 
-        public StudentClassService(IStudentClassDbService studentClassDbService)
+
+        public StudentClassService(IStudentClassDbService studentClassDbService, IContextService contextService)
         {
             _studentClassDbService = studentClassDbService;
+            _contextService = contextService;
         }
 
         public async Task<List<ListedStudentDto>> GetStudentsInClassAsync(int classId)
@@ -43,11 +46,11 @@ namespace SchoolJournalApi.Services.AppServices
             {
                 throw new BusinessLogicException("Selected user is not a student!");
             }
-            using var transaction = await _studentClassDbService.BeginTransactionAsync();
+            using var transaction = await _contextService.BeginTransactionAsync();
             var studentClass = await _studentClassDbService.FindStudentClassAsync(studentId);
             if (studentClass is null)
             {
-                await TransferStudentWithoutCurrentClassAsync(studentId, newClassId);
+                TransferStudentWithoutCurrentClassAsync(studentId, newClassId);
                 await transaction.CommitAsync();
                 return;
             }
@@ -58,7 +61,7 @@ namespace SchoolJournalApi.Services.AppServices
             }
             var newStudentClass = CreateStudentClassEntity(studentId, newClassId);
             studentClass.IsActive = false;
-            await _studentClassDbService.AddStudentClassAsync(newStudentClass);
+            _studentClassDbService.AddStudentClass(newStudentClass);
             await transaction.CommitAsync();
         }
 
@@ -71,10 +74,10 @@ namespace SchoolJournalApi.Services.AppServices
                 IsActive = true
             };
         }
-        private async Task TransferStudentWithoutCurrentClassAsync(int newClassId, int studentId) 
+        private void TransferStudentWithoutCurrentClassAsync(int newClassId, int studentId) 
         {
             var newStudentClass = CreateStudentClassEntity(studentId, newClassId);
-            await _studentClassDbService.AddStudentClassAsync(newStudentClass);
+            _studentClassDbService.AddStudentClass(newStudentClass);
         }
     }
 }

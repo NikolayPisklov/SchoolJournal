@@ -12,11 +12,15 @@ namespace SchoolJournalApi.Services.AppServices
     {
         private readonly ILessonDbService _lessonDbService;
         private readonly IJournalDbService _journalDbService;
+        private readonly IContextService _contextService;
 
-        public LessonService(ILessonDbService lessonDbService, IJournalDbService journalDbService)
+
+        public LessonService(ILessonDbService lessonDbService, IJournalDbService journalDbService, 
+            IContextService contextService)
         {
             _lessonDbService = lessonDbService;
             _journalDbService = journalDbService;
+            _contextService = contextService;
         }
 
         public async Task AddLessonAsync(AddLessonDto lessonDto)
@@ -32,7 +36,8 @@ namespace SchoolJournalApi.Services.AppServices
                 JournalId = lessonDto.JournalId,
                 LessonDate = (DateOnly)lessonDto.LessonDate!
             };
-            await _lessonDbService.AddLessonAsync(newLesson);
+            _lessonDbService.AddLesson(newLesson);
+            await _contextService.SaveChangesAsync();
         }
 
         public async Task DeleteLessonAsync(int lessonId)
@@ -46,7 +51,8 @@ namespace SchoolJournalApi.Services.AppServices
             {
                 throw new BusinessLogicException("Cannot delete lesson after it is being teached");
             }
-            await _lessonDbService.DeleteLessonAsync(lesson);
+            _lessonDbService.DeleteLesson(lesson);
+            await _contextService.SaveChangesAsync();
         }
 
         public async Task<List<LessonDto>> GetLessonsForJournalAsync(int journalId, int month, int journalYear)
@@ -83,7 +89,7 @@ namespace SchoolJournalApi.Services.AppServices
             }
             lesson.Homework = detailsDto.Homework;
             lesson.Theme = detailsDto.Theme;
-            await _lessonDbService.SaveChangesAsync();
+            await _contextService.SaveChangesAsync();
         }
 
         private bool IsLessonDateValidToJournalYear(int journalYear, DateOnly lessonDate)

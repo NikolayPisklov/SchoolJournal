@@ -39,40 +39,13 @@ namespace SchoolJournalApi.Services.DbServices
             };
             return dto;
         }
-        public async Task SaveChangesAsync() 
+        public void AddUser(User user) 
         {
-            try
-            {
-                await _db.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex) 
-            {
-                throw new EntityUpdateException("An error has occured while updating User entity!", ex);
-            }
+             _db.Users.Add(user);
         }
-        public async Task AddUserAsync(User user) 
+        public void DeleteUser(User user) 
         {
-            try
-            {
-                _db.Users.Add(user);
-                await _db.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex) 
-            {
-                throw new EntityAddingException("An error has occured while adding User entity!", ex);
-            }
-        }
-        public async Task DeleteUserAsync(User user) 
-        {
-            try
-            {
-                _db.Users.Remove(user);
-                await _db.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex) 
-            {
-                throw new EntityInUseException($"Entity User with Id: {user.Id} is in use and can't be deleted!", ex);
-            }
+            _db.Users.Remove(user);
         }
 
         public async Task<StudentClass?> FindClassOfStudentAsync(int userId)

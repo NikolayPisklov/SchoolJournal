@@ -2,7 +2,6 @@
 using SchoolJournalApi.Enum_s;
 using SchoolJournalApi.Models;
 using SchoolJournalApi.Exceptions;
-using Microsoft.EntityFrameworkCore.Storage;
 using SchoolJournalApi.Services.DbServices.Interfaces;
 using System.Data.Common;
 
@@ -27,10 +26,6 @@ namespace SchoolJournalApi.Services.DbServices
                 throw new EfDbException("An error has occured while reading data from DB!", ex);
             }
         }
-        public async Task<IDbContextTransaction> BeginTransactionAsync() 
-        {
-            return await _db.Database.BeginTransactionAsync();
-        }
         public async Task<StudentClass?> FindStudentClassAsync(int studentId)
         {
             try
@@ -42,18 +37,9 @@ namespace SchoolJournalApi.Services.DbServices
                 throw new EfDbException("An error has occured while reading data from DB!", ex);
             }
         }
-        public async Task AddStudentClassAsync(StudentClass studentClass) 
+        public void AddStudentClass(StudentClass studentClass) 
         {
-            try
-            {
-                _db.Add(studentClass);
-                await _db.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex) 
-            {
-                throw new EfDbException("An error has occured while adding data to DB!", ex);
-            }
-            
+            _db.Add(studentClass);
         }
     }
 }

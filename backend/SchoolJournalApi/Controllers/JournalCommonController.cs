@@ -11,12 +11,12 @@ namespace SchoolJournalApi.Controllers
     public class JournalCommonController : ControllerBase
     {
         private readonly IJournalService _journalDbService;
-        private readonly IProgressDbService _progressDbService;
+        private readonly IProgressService _progressService;
 
-        public JournalCommonController(IJournalService journalDbService, IProgressDbService progressDbService) 
+        public JournalCommonController(IJournalService journalDbService, IProgressService progressService) 
         {
             _journalDbService = journalDbService;
-            _progressDbService = progressDbService;
+            _progressService = progressService;
         }
 
         [HttpGet("get-journal-title")]
@@ -28,7 +28,7 @@ namespace SchoolJournalApi.Controllers
         [HttpGet("get-student-statictic")]
         public async Task<IActionResult> GetStudentStatistic(int studentId, int journalId)
         {
-            var dto = await _progressDbService.GetStudentStatisticAsync(studentId, journalId);
+            var dto = await _progressService.GetStudentStatisticAsync(studentId, journalId);
             return Ok(dto);
         }
     }

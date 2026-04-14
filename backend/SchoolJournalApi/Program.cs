@@ -6,6 +6,7 @@ using Scalar.AspNetCore;
 using SchoolJournalApi;
 using SchoolJournalApi.Middleware;
 using SchoolJournalApi.Models;
+using SchoolJournalApi.Services;
 using SchoolJournalApi.Services.AppServices;
 using SchoolJournalApi.Services.AppServices.Interfaces;
 using SchoolJournalApi.Services.DbServices;
@@ -68,7 +69,9 @@ builder.Services.AddScoped<ITeacherSubjectService, TeacherSubjectService>();
 builder.Services.AddScoped<IStudentClassService, StudentClassService>();
 builder.Services.AddScoped<IJournalService, JournalService>();
 builder.Services.AddScoped<ILessonService, LessonService>();
-builder.Services.AddScoped<IProgressService, ProgressService>();   
+builder.Services.AddScoped<IProgressService, ProgressService>(); 
+
+builder.Services.AddScoped<IContextService,  ContextService>();
 //Repos
 builder.Services.AddScoped<IUsersDbService, UserDbService>();
 builder.Services.AddScoped<IClassDbService, ClassDbService>();

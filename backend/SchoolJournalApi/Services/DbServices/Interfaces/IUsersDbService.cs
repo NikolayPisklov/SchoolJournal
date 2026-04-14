@@ -4,9 +4,8 @@ namespace SchoolJournalApi.Services.DbServices.Interfaces
 {
     public interface IUsersDbService
     {
-        Task SaveChangesAsync();
-        Task AddUserAsync(User user);
-        Task DeleteUserAsync(User user);
+        void AddUser(User user);
+        void DeleteUser(User user);
         IQueryable<Status> GetUserStatuses();
         Task<User?> FindUserAsync(int userId);
         Task<bool> IsThereUserWithSameLoginAsync(string login, int? userId);

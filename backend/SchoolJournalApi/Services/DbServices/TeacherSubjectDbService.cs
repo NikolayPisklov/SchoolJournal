@@ -34,29 +34,13 @@ namespace SchoolJournalApi.Services.DbServices
                 throw new EfDbException("An error has occur while reading data from DB!", ex);
             }
         }
-        public async Task DeleteTeacherSubjectAsync(TeacherSubject teacherSubject) 
+        public void DeleteTeacherSubject(TeacherSubject teacherSubject) 
         {
-            try
-            {
-                _db.Remove(teacherSubject);
-                await _db.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex) 
-            {
-                throw new EntityInUseException($"Entity TeacherSubject with Id: {teacherSubject.Id} is in use and can't be deleted!", ex);
-            }
+             _db.Remove(teacherSubject);
         }
-        public async Task AddTeacherSubjectAsync(TeacherSubject teacherSubject) 
+        public void AddTeacherSubject(TeacherSubject teacherSubject) 
         {
-            try
-            {
-                _db.Add(teacherSubject);
-                await _db.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex) 
-            {
-                throw new EntityAddingException("An error has occue while adding entity TeacherSubject!", ex);
-            }           
+            _db.Add(teacherSubject);        
         }
         public IQueryable<TeacherSubject> GetTeacherSubjectsForTeacher(int userId) 
         {

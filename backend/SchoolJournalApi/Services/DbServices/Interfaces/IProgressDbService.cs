@@ -1,16 +1,15 @@
-﻿using SchoolJournalApi.Dtos;
-using SchoolJournalApi.Dtos.Progress;
+﻿using SchoolJournalApi.Models;
 
 namespace SchoolJournalApi.Services.DbServices.Interfaces
 {
     public interface IProgressDbService
     {
-        Task<List<MarkDto>> GetAllMarksAsync();
-        Task<List<AttendanceDto>> GetAllAttendancesAsync();
-        Task AddProgressAsync(AddProgressDto dto);
-        Task UpdateProgressAsync(ProgressDto dto);
-        Task<List<JournalProgressDto>> GetProgressesForJournalAsync(int journalId);
-        Task<ProgressDetailsDto>GetProgressDetailsAsync(int progressId);
-        Task<StudentStaticticDto>GetStudentStatisticAsync(int studentId, int journalId);
+        IQueryable<Mark> GetMarks();
+        IQueryable<Attendance> GetAttendances();
+        IQueryable<Progress> GetProgressesForJournal(int journalId);
+        IQueryable<Progress> GetProgressesForStudentStatistic(int studentId, int journalId);
+        void AddProgress(Progress progress);
+        Task<Progress?> FindProgressAsync(int progressId);
+        IQueryable<Progress> GetProgressHistory(int userId, int lessonId);
     }
 }
