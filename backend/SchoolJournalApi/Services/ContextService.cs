@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore.Storage;
+﻿using EntityFramework.Exceptions.Common;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using SchoolJournalApi.Exceptions;
 using SchoolJournalApi.Models;
 using System.Data.Common;
@@ -32,9 +34,9 @@ namespace SchoolJournalApi.Services
             {
                 await _context.SaveChangesAsync();
             }
-            catch (DbException ex)
+            catch (DbUpdateException)
             {
-                throw new EfDbException("An error during saving changes to DB.", ex);
+                throw;
             }
         }
     }

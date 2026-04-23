@@ -1,10 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using EntityFramework.Exceptions.Common;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using SchoolJournalApi.Dtos.User;
 using SchoolJournalApi.Exceptions;
 using SchoolJournalApi.Models;
 using SchoolJournalApi.Services.AppServices.Interfaces;
 using SchoolJournalApi.Services.DbServices.Interfaces;
-using System.Data.Common;
 
 namespace SchoolJournalApi.Services.AppServices
 {
@@ -34,35 +35,40 @@ namespace SchoolJournalApi.Services.AppServices
                         MiddleName = s.MiddleName
                     }).ToListAsync();
             }
-            catch (DbException ex)
+            catch (SqlException ex)
             {
-                throw new EfDbException("An error has occured while reading data from DB!", ex);
+                throw new EfDbException("An error has occur while connecting to DB!", ex);
             }
 
         }
         public async Task TransferStudentToAnotherCLassAsync(int studentId, int newClassId)
         {
-            if (!await _studentClassDbService.IsStudent(studentId)) 
+            try
             {
-                throw new BusinessLogicException("Selected user is not a student!");
+                if (!await _studentClassDbService.IsStudent(studentId))
+                {
+                    throw new BusinessLogicException("Selected user is not a student!");
+                }
+                var studentClass = await _studentClassDbService.FindStudentClassAsync(studentId);
+                if (studentClass is null)
+                {
+                    TransferStudentWithoutCurrentClass(newClassId, studentId);
+                    await _contextService.SaveChangesAsync();
+                    return;
+                }
+                var newStudentClass = CreateStudentClassEntity(studentId, newClassId);
+                studentClass.IsActive = false;
+                _studentClassDbService.AddStudentClass(newStudentClass);
+                await _contextService.SaveChangesAsync();
             }
-            using var transaction = await _contextService.BeginTransactionAsync();
-            var studentClass = await _studentClassDbService.FindStudentClassAsync(studentId);
-            if (studentClass is null)
+            catch(ReferenceConstraintException ex)
             {
-                TransferStudentWithoutCurrentClassAsync(studentId, newClassId);
-                await transaction.CommitAsync();
-                return;
+                throw new EfDbException("An error has occured while transfering student from class to class.", ex);
             }
-            if (studentClass.ClassId == newClassId)
+            catch(UniqueConstraintException)
             {
-                await transaction.RollbackAsync();
                 throw new BusinessLogicException("Student can't be transfered to the same class!");
             }
-            var newStudentClass = CreateStudentClassEntity(studentId, newClassId);
-            studentClass.IsActive = false;
-            _studentClassDbService.AddStudentClass(newStudentClass);
-            await transaction.CommitAsync();
         }
 
         private StudentClass CreateStudentClassEntity(int studentId, int newClassId) 
@@ -74,7 +80,7 @@ namespace SchoolJournalApi.Services.AppServices
                 IsActive = true
             };
         }
-        private void TransferStudentWithoutCurrentClassAsync(int newClassId, int studentId) 
+        private void TransferStudentWithoutCurrentClass(int newClassId, int studentId) 
         {
             var newStudentClass = CreateStudentClassEntity(studentId, newClassId);
             _studentClassDbService.AddStudentClass(newStudentClass);

@@ -39,7 +39,7 @@ namespace SchoolJournalApi.Services.DbServices
         }
         public void AddStudentClass(StudentClass studentClass) 
         {
-            _db.Add(studentClass);
+            _db.StudentClasses.Add(studentClass);
         }
     }
 }

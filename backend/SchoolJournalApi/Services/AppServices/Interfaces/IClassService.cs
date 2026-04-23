@@ -9,5 +9,6 @@ namespace SchoolJournalApi.Services.AppServices.Interfaces
         Task DeleteClassAsync(int classId);
         Task<ClassDto> GetClassDtoAsync(int classId);
         Task<PagingResultDto<ClassDto>> GetClassesOnPageAsync(int pageSize, int? educationalLevelId, int page = 1);
+        Task<List<ClassDto>> GetAllClassesAsync();
     }
 }

@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using EntityFramework.Exceptions.Common;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using SchoolJournalApi.Dto_s;
 using SchoolJournalApi.Dtos.User;
@@ -24,115 +26,182 @@ namespace SchoolJournalApi.Services.AppServices
 
         public async Task UpdateUserAsync(UserUpdateDto dto) 
         {
-            var user = await _dbService.FindUserAsync(dto.Id);
-            if (user is null)
+            try
             {
-                throw new EntityNotFoundException($"Entity User with Id: {dto.Id} is not found!");
+                var user = await _dbService.FindUserAsync(dto.Id);
+                if (user is null)
+                {
+                    throw new EntityNotFoundException($"Entity User with Id: {dto.Id} is not found!");
+                }
+                if (await _dbService.IsThereUserWithSameLoginAsync(dto.Login, dto.Id))
+                {
+                    throw new EntityAlreadyExistsException($"User with the same login already exists!");
+                }
+                if (await _dbService.IsThereUserWithSameEmailAsync(dto.Email, dto.Id))
+                {
+                    throw new EntityAlreadyExistsException($"User with the same email already exists!");
+                }
+                MapUserToUpdateDto(user, dto);
+                await _contextService.SaveChangesAsync();
             }
-            if (await _dbService.IsThereUserWithSameLoginAsync(dto.Login, dto.Id))
+            catch (ReferenceConstraintException ex)
             {
-                throw new EntityAlreadyExistsException($"Entity User with Login {dto.Login} is already exists!");
+                throw new EntityInUseException("An error has occured while updating user.", ex);
             }
-            MapUserToUpdateDto(user, dto);
-            await _contextService.SaveChangesAsync();            
+            catch (SqlException ex)
+            {
+                throw new EfDbException("An error has occur while connecting to DB!", ex);
+            }                        
         }
         public async Task AddUserAsync(UserCreationDto dto) 
         {
-            if (await _dbService.IsThereUserWithSameLoginAsync(dto.Login)) 
+            try
             {
-                throw new EntityAlreadyExistsException($"Entity User with Login {dto.Login} is already exists!");
+                if (await _dbService.IsThereUserWithSameLoginAsync(dto.Login))
+                {
+                    throw new EntityAlreadyExistsException($"User with the same login already exists!");
+                }
+                if (await _dbService.IsThereUserWithSameEmailAsync(dto.Email))
+                {
+                    throw new EntityAlreadyExistsException($"User with the same email already exists!");
+                }
+                User user = new User();
+                MapUserToCreationDto(user, dto);
+                _dbService.AddUser(user);
+                await _contextService.SaveChangesAsync();
             }
-            User user = new User();
-            MapUserToCreationDto(user, dto);
-            _dbService.AddUser(user);
-            await _contextService.SaveChangesAsync();
+            catch (ReferenceConstraintException ex)
+            {
+                throw new EntityInUseException("An error has occured while adding user.", ex);
+            }
+            catch (SqlException ex)
+            {
+                throw new EfDbException("An error has occur while connecting to DB!", ex);
+            }            
         }
         public async Task DeleteUserAsync(int userId) 
         {
-            var user = await _dbService.FindUserAsync(userId);
-            if(user is null) 
+            try
             {
-                throw new EntityNotFoundException($"User with Id: {userId} is not found!");
+                var user = await _dbService.FindUserAsync(userId);
+                if (user is null)
+                {
+                    throw new EntityNotFoundException($"User with Id: {userId} is not found!");
+                }
+                _dbService.DeleteUser(user);
+                await _contextService.SaveChangesAsync();
             }
-            _dbService.DeleteUser(user);
-            await _contextService.SaveChangesAsync();
+            catch(ReferenceConstraintException ex)
+            {
+                throw new EntityInUseException("User are bound to other records and can't be deleted.", ex);
+            }
+            catch (SqlException ex)
+            {
+                throw new EfDbException("An error has occur while connecting to DB!", ex);
+            }
         }
         public async Task<List<StatusDto>> GetUserStatusesAsync() 
         {
-            var statuses = _dbService.GetUserStatuses();
-            var dtos = await statuses.Select(s => new StatusDto
+            try
             {
-                Id = s.Id,
-                Title = s.Title
-            }).ToListAsync();
-            return dtos;
+                var statuses = _dbService.GetUserStatuses();
+                var dtos = await statuses.Select(s => new StatusDto
+                {
+                    Id = s.Id,
+                    Title = s.Title
+                }).ToListAsync();
+                return dtos;
+            }
+            catch (SqlException ex)
+            {
+                throw new EfDbException("An error has occur while connecting to DB!", ex);
+            }            
         }
         public async Task<UserUpdateDto> GetUserDetailsAsync(int userId) 
         {
-            var user = await _dbService.FindUserAsync(userId);
-            if( user is null)
+            try
             {
-                throw new EntityNotFoundException($"User with Id: {userId} is not found!");
+                var user = await _dbService.FindUserAsync(userId);
+                if (user is null)
+                {
+                    throw new EntityNotFoundException($"User with Id: {userId} is not found!");
+                }
+                UserUpdateDto dto = new UserUpdateDto
+                {
+                    Id = user.Id,
+                    Login = user.Login,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Email = user.Email,
+                    MiddleName = user.MiddleName
+                };
+                return dto;
             }
-            UserUpdateDto dto = new UserUpdateDto
+            catch (SqlException ex)
             {
-                Id = user.Id,
-                Login = user.Login,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email,
-                MiddleName = user.MiddleName
-            };
-            return dto;
+                throw new EfDbException("An error has occur while connecting to DB!", ex);
+            } 
         }
         public async Task<PagingResultDto<ListedUserDto>> GetUsersOnPageAsync(int? statusId, string? nameSearch, int pageSize, int page = 1) 
         {
-            var users = _dbService.GetAllUsers();
-            users = FilterUsers(users, statusId, nameSearch);
-            int numberOfPages = await CalculateNumberOfPagesAsync(users, pageSize);
-            List<ListedUserDto> dtoUsersList = await users.OrderBy(x => x.LastName)
-               .Skip((page - 1) * pageSize)
-               .Take(pageSize)
-               .Select(x => new ListedUserDto
-               {
-                   Id = x.Id,
-                   StatusId = x.StatusId,
-                   FirstName = x.FirstName,
-                   LastName = x.LastName,
-                   MiddleName = x.MiddleName,
-                   ClassTitle = x.StudentClasses.Where(x => x.IsActive).Select(x => x.Class.Title).FirstOrDefault(),
-                   ClassYear = x.StudentClasses.Where(x => x.IsActive).Select(x => x.Class.Year).FirstOrDefault(),
-               }).ToListAsync();
-            return new PagingResultDto<ListedUserDto> { Items = dtoUsersList, NumberOfPages = numberOfPages };
+            try
+            {
+                var users = _dbService.GetAllUsers();
+                users = FilterUsers(users, statusId, nameSearch);
+                int numberOfPages = await CalculateNumberOfPagesAsync(users, pageSize);
+                List<ListedUserDto> dtoUsersList = await users.OrderBy(x => x.LastName)
+                   .Skip((page - 1) * pageSize)
+                   .Take(pageSize)
+                   .Select(x => new ListedUserDto
+                   {
+                       Id = x.Id,
+                       StatusId = x.StatusId,
+                       FirstName = x.FirstName,
+                       LastName = x.LastName,
+                       MiddleName = x.MiddleName,
+                       ClassTitle = x.StudentClasses.Where(x => x.IsActive).Select(x => x.Class.Title).FirstOrDefault(),
+                       ClassYear = x.StudentClasses.Where(x => x.IsActive).Select(x => x.Class.Year).FirstOrDefault(),
+                   }).ToListAsync();
+                return new PagingResultDto<ListedUserDto> { Items = dtoUsersList, NumberOfPages = numberOfPages };
+            }
+            catch (SqlException ex)
+            {
+                throw new EfDbException("An error has occur while connecting to DB!", ex);
+            }
         }
         public async Task<int> GetUserStatusAsync(int userId) 
         {
-            var userStatus = await _dbService.FindUserAsync(userId);
-            if (userStatus is null)
+            try
             {
-                throw new EntityNotFoundException($"User with Id: {userId} can't be found!");
+                return await _dbService.SelectUserStatusId(userId);
             }
-            return userStatus.StatusId;
+            catch (SqlException ex)
+            {
+                throw new EfDbException("An error has occur while connecting to DB!", ex);
+            }           
         }
         public async Task<ClassDto> GetClassOfStudentAsync(int userId) 
         {
-            var studentClass = await _dbService.FindClassOfStudentAsync(userId);
-            if (studentClass is null)
+            try
             {
-                throw new EntityNotFoundException($"Student-Class for student with Id: {userId} is not found!");
+                var studentClass = await _dbService.FindClassOfStudentAsync(userId);
+                if (studentClass is null)
+                {
+                    throw new EntityNotFoundException($"Student-Class for student with Id: {userId} is not found!");
+                }
+                var clas = studentClass.Class;
+                return new ClassDto
+                {
+                    Id = clas.Id,
+                    Title = clas.Title,
+                    EducationalLevelId = clas.EducationalLevelId,
+                    Year = clas.Year
+                };
             }
-            var clas = studentClass.Class;
-            if (clas is null)
+            catch (SqlException ex)
             {
-                throw new EntityNotFoundException($"Student with Id: {userId} is not in class!");
+                throw new EfDbException("An error has occur while connecting to DB!", ex);
             }
-            return new ClassDto
-            {
-                Id = clas.Id,
-                Title = clas.Title,
-                EducationalLevelId = clas.EducationalLevelId,
-                Year = clas.Year
-            };
         }
 
 

@@ -5,7 +5,6 @@ using SchoolJournalApi.Dtos.Journal;
 using SchoolJournalApi.Dtos.User;
 using SchoolJournalApi.Enum_s;
 using SchoolJournalApi.Services.AppServices.Interfaces;
-using SchoolJournalApi.Services.DbServices.Interfaces;
 
 namespace SchoolJournalApi.Controllers
 {
@@ -86,6 +85,11 @@ namespace SchoolJournalApi.Controllers
             return Ok(dto);
         }
         //Classes-----------------------------------------------------------------------------------------------------------------
+        [HttpGet("get-classes")]
+        public async Task<IActionResult> GetAllClasses() 
+        {
+            return Ok(await _classService.GetAllClassesAsync());
+        }
         [HttpGet("get-classes-on-page")]
         public async Task<IActionResult> GetClassesOnPage(int pageSize, int? educationalLevel, int page = 1) 
         {

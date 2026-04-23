@@ -1,10 +1,9 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using SchoolJournalApi.Dto_s;
-using SchoolJournalApi.Dtos.User;
+﻿using Microsoft.EntityFrameworkCore;
 using SchoolJournalApi.Exceptions;
 using SchoolJournalApi.Models;
 using SchoolJournalApi.Services.DbServices.Interfaces;
+using System.Data.Common;
+using System.Threading.Tasks;
 
 namespace SchoolJournalApi.Services.DbServices
 {
@@ -19,25 +18,7 @@ namespace SchoolJournalApi.Services.DbServices
         }
         public IQueryable<Status> GetUserStatuses() 
         {
-            return _db.Statuses;
-        }
-        public async Task<UserUpdateDto?> GetUserDetailsAsync(int userId) 
-        {
-            var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == userId);
-            if(user is null) 
-            {
-                return null;
-            }
-            var dto = new UserUpdateDto
-            {
-                Id = userId,
-                Login = user.Login,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                MiddleName = user.MiddleName,
-                Email = user.Email
-            };
-            return dto;
+            return _db.Statuses.AsNoTracking();
         }
         public void AddUser(User user) 
         {
@@ -56,7 +37,14 @@ namespace SchoolJournalApi.Services.DbServices
         }
         public async Task<User?> FindUserAsync(int userId) 
         {
-            return await _db.Users.FindAsync(userId);
+            try
+            {
+                return await _db.Users.FindAsync(userId);
+            }
+            catch (DbException ex)
+            {
+                throw new EfDbException("An error has occur while reading data!", ex);
+            }            
         }
         public IQueryable<User> FilterUsersByStatus(IQueryable<User> users, int statusId) 
         {
@@ -74,13 +62,61 @@ namespace SchoolJournalApi.Services.DbServices
             );
             return users;
         }
+        public async Task<bool> IsThereUserWithSameEmailAsync(string email, int? userId)
+        {
+            try
+            {
+                return await _db.Users.AnyAsync(x => email.Equals(x.Email) && x.Id != userId);
+            }
+            catch (DbException ex)
+            {
+                throw new EfDbException("An error has occur while reading data!", ex);
+            }
+        }
+        public async Task<bool> IsThereUserWithSameEmailAsync(string email)
+        {
+            try
+            {
+                return await _db.Users.AnyAsync(x => email.Equals(x.Email));
+            }
+            catch (DbException ex)
+            {
+                throw new EfDbException("An error has occur while reading data!", ex);
+            }
+        }
         public async Task<bool> IsThereUserWithSameLoginAsync(string login, int? userId)
         {
-            return await _db.Users.AnyAsync(x => login.Equals(x.Login) && x.Id != userId);             
+            try
+            {
+                return await _db.Users.AnyAsync(x => login.Equals(x.Login) && x.Id != userId);
+            }
+            catch (DbException ex)
+            {
+                throw new EfDbException("An error has occur while reading data!", ex);
+            }                   
         }
         public async Task<bool> IsThereUserWithSameLoginAsync(string login)
         {
-            return await _db.Users.AnyAsync(x => login.Equals(x.Login));
+            try
+            {
+                return await _db.Users.AnyAsync(x => login.Equals(x.Login));
+            }
+            catch (DbException ex)
+            {
+                throw new EfDbException("An error has occur while reading data!", ex);
+            }           
+        }
+        public async Task<int> SelectUserStatusId(int userId)
+        {
+            try
+            {
+                var statusId = await _db.Users.Where(u => u.Id == userId).Select(u => u.StatusId).SingleAsync();
+                return statusId;
+            }
+            catch (DbException ex) 
+            {
+                throw new EfDbException("An error has occur while reading data!", ex);
+            }           
         }
     }
 }

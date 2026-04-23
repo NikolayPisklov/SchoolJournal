@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using EntityFramework.Exceptions.Common;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using SchoolJournalApi.Dtos;
 using SchoolJournalApi.Dtos.Progress;
 using SchoolJournalApi.Enums;
@@ -26,17 +28,28 @@ namespace SchoolJournalApi.Services.AppServices
 
         public async Task AddProgressAsync(AddProgressDto dto)
         {
-            await ValidateProgressAsync(dto.AttendanceId, dto.MarkId, dto.LessonId);
-            var newProgress = new Progress
+            try
             {
-                UserId = dto.UserId,
-                LessonId = dto.LessonId,
-                MarkId = dto.MarkId,
-                AttendanceId = (int)dto.AttendanceId!,
-                ProgressUpdateDate = dto.ProgressUpdateDate
-            };
-            _progressDbService.AddProgress(newProgress);
-            await _contextService.SaveChangesAsync();
+                await ValidateProgressAsync(dto.AttendanceId, dto.MarkId, dto.LessonId);
+                var newProgress = new Progress
+                {
+                    UserId = dto.UserId,
+                    LessonId = dto.LessonId,
+                    MarkId = dto.MarkId,
+                    AttendanceId = (int)dto.AttendanceId!,
+                    ProgressUpdateDate = dto.ProgressUpdateDate
+                };
+                _progressDbService.AddProgress(newProgress);
+                await _contextService.SaveChangesAsync();
+            }
+            catch (ReferenceConstraintException ex)
+            {
+                throw new EntityAddingException("An error has occured while adding Progress entity to DB.", ex);
+            }
+            catch (SqlException ex)
+            {
+                throw new EfDbException("An error has occurred while connecting to DB!", ex);
+            }            
         }
 
         public Task<List<AttendanceDto>> GetAllAttendancesAsync()
@@ -50,9 +63,9 @@ namespace SchoolJournalApi.Services.AppServices
                     Value = m.Value
                 }).ToListAsync();
             }
-            catch(DbException ex) 
+            catch(SqlException ex) 
             {
-                throw new EfDbException("An error has occured while reading data from DB!", ex);
+                throw new EfDbException("An error has occurred while reading data from DB!", ex);
             }
         }
         public Task<List<MarkDto>> GetAllMarksAsync()
@@ -66,29 +79,36 @@ namespace SchoolJournalApi.Services.AppServices
                     Value = m.Value
                 }).ToListAsync();
             }
-            catch(DbException ex) 
+            catch(SqlException ex) 
             {
                 throw new EfDbException("An error has occured while reading data from DB!", ex);
             }
         }
         public async Task<ProgressDetailsDto> GetProgressDetailsAsync(int progressId)
         {
-            var progress = await _progressDbService.FindProgressAsync(progressId);
-            if(progress is null)
+            try
             {
-                throw new EntityNotFoundException($"Progress with Id: {progressId} is not found!");
+                var progress = await _progressDbService.FindProgressAsync(progressId);
+                if (progress is null)
+                {
+                    throw new EntityNotFoundException($"Progress with Id: {progressId} is not found!");
+                }
+                return new ProgressDetailsDto
+                {
+                    Id = progress.Id,
+                    UserId = progress.UserId,
+                    LessonId = progress.LessonId,
+                    MarkId = progress.MarkId,
+                    AttendanceId = progress.AttendanceId,
+                    ProgressUpdateDate = progress.ProgressUpdateDate,
+                    LessonDate = progress.Lesson.LessonDate,
+                    ProgressChangeHistory = await GetProgressHistoryAsync(progress.UserId, progress.LessonId)
+                };
             }
-            return new ProgressDetailsDto
+            catch (SqlException ex)
             {
-                Id = progress.Id,
-                UserId = progress.UserId,
-                LessonId = progress.LessonId,
-                MarkId = progress.MarkId,
-                AttendanceId = progress.AttendanceId,
-                ProgressUpdateDate = progress.ProgressUpdateDate,
-                LessonDate = progress.Lesson.LessonDate,
-                ProgressChangeHistory = await GetProgressHistoryAsync(progress.UserId, progress.LessonId)
-            };
+                throw new EfDbException("An error has occurred while reading data from DB!", ex);
+            }           
         }
         private async Task<List<JournalProgressDto>> GetProgressHistoryAsync(int userId, int lessonId) 
         {
@@ -105,7 +125,7 @@ namespace SchoolJournalApi.Services.AppServices
                         ProgressUpdateTime = p.ProgressUpdateDate
                     }).ToListAsync();
             }
-            catch (DbException ex) 
+            catch (SqlException ex) 
             {
                 throw new EfDbException("An error has occured while reading data from DB!", ex);
             }            
@@ -125,7 +145,7 @@ namespace SchoolJournalApi.Services.AppServices
                     ProgressUpdateTime = p.ProgressUpdateDate
                 }).ToListAsync();
             }
-            catch (DbException ex) 
+            catch (SqlException ex) 
             {
                 throw new EfDbException("An error has occured while reading data from DB!", ex);
             }
@@ -144,7 +164,7 @@ namespace SchoolJournalApi.Services.AppServices
                 var factMarks = data.Select(x => x.Mark).ToList();
                 return CreateStudentStatisticDto(factMarks, dates);
             }
-            catch (DbException ex) 
+            catch (SqlException ex) 
             {
                 throw new EfDbException("An error has occured while reading data from DB!", ex);
             }            
@@ -204,24 +224,31 @@ namespace SchoolJournalApi.Services.AppServices
         }
         private async Task ValidateProgressAsync(int? attendanceId, int? markId, int lessonId)
         {
-            if ((attendanceId == (int)Attendances.Absent || attendanceId == (int)Attendances.AbsentWithReason)
+            try
+            {
+                if ((attendanceId == (int)Attendances.Absent || attendanceId == (int)Attendances.AbsentWithReason)
                     && markId is not null)
-            {
-                throw new BusinessLogicException("Student can't be absent and recieve a mark!");
+                {
+                    throw new BusinessLogicException("Student can't be absent and recieve a mark!");
+                }
+                var lesson = await _lessonDbService.FindLessonAsync(lessonId);
+                if (lesson is null)
+                {
+                    throw new EntityNotFoundException("Lesson fow progress is not found!");
+                }
+                var dateNow = DateOnly.Parse(DateTime.Now.ToString());
+                if (lesson.LessonDate > dateNow)
+                {
+                    throw new BusinessLogicException("Can't edit progress before a lesson has been taught.");
+                }
+                if (lesson.LessonDate.AddDays(30) < dateNow)
+                {
+                    throw new BusinessLogicException("Can't edit progress after 30 days since lesson has been taught.");
+                }
             }
-            var lesson = await _lessonDbService.FindLessonAsync(lessonId);
-            if(lesson is null)
+            catch (SqlException ex)
             {
-                throw new EntityNotFoundException("Lesson fow progress is not found!");
-            }
-            var dateNow = DateOnly.Parse(DateTime.Now.ToString());
-            if (lesson.LessonDate > dateNow) 
-            {
-                throw new BusinessLogicException("Can't edit progress before a lesson has been taught.");
-            }
-            if(lesson.LessonDate.AddDays(30) < dateNow)
-            {
-                throw new BusinessLogicException("Can't edit progress after 30 days since lesson has been taught.");
+                throw new EfDbException("An error has occured while reading data from DB!", ex);
             }
         }
     }

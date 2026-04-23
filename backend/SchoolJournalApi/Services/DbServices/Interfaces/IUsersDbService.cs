@@ -14,7 +14,8 @@ namespace SchoolJournalApi.Services.DbServices.Interfaces
         IQueryable<User> FilterUsersByStatus(IQueryable<User> users, int statusId);
         IQueryable<User> FilterUsersByName(IQueryable<User> users, string searchString);
         Task<StudentClass?> FindClassOfStudentAsync(int userId);
-
-
+        Task<bool> IsThereUserWithSameEmailAsync(string email, int? userId);
+        Task<bool> IsThereUserWithSameEmailAsync(string email);
+        Task<int> SelectUserStatusId(int userId);
     }
 }

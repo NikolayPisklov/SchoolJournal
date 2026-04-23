@@ -40,17 +40,15 @@
                         {{ user.lastName }} {{ user.firstName }} {{ user.middleName }} | {{ formAdditionalInfo(user) }}
                     </li>
                 </ul>
-
-                
                 <Pagination
                     :current-page="currentPage"
                     :number-of-pages="numberOfPages"
-                    @change="onPageChange"
+                    @change="onPageChangeClick"
                 />
                
             </div>
-            <div class="col-span-4 flex justify-center" v-if="deleteSuccessMessage">
-                <span v-if="deleteSuccessMessage" class="text-emerald-700">{{ deleteSuccessMessage }}</span>
+            <div v-if="successMessage" class="col-span-4 flex m-3">
+                <span  class="text-emerald-700">{{ successMessage }}</span>
             </div>
             <div class="col-span-4 ps-3" v-if="isEditFormVisible || isAddFormVisible">
                 <p v-if="isEditFormVisible">Форма редактирования пользователя {{ user.lastName }} 
@@ -58,7 +56,7 @@
                 <p v-if="isAddFormVisible">Форма добавления пользователя</p>
                 <span v-if="deleteErrorMessage" class="error">{{ deleteErrorMessage }}</span>   
                 <form @submit.prevent="submitForm" class="w-full max-w-lg min-w-min mt-3">
-                    <span v-if="successMessage" class="text-emerald-700">{{ successMessage }}</span>
+                    
 
                     <div v-if="isAddFormVisible">
                         <label for="newUserRole" class="font-medium block">Статус пользователя</label>
@@ -114,7 +112,7 @@
                             class="btn-primary" aria-label="Применить">
                             Применить
                         </button>
-                        <button v-if="isEditFormVisible" type="submit" style="cursor: pointer" @click="onUserDelete"
+                        <button v-if="isEditFormVisible" type="submit" style="cursor: pointer" @click="onUserDeleteClick"
                                 class="ms-1 btn-red">
                                 Удалить пользователя
                             </button>
@@ -173,7 +171,7 @@
                                 <span v-if="ts.subjectEducationalLevelId === 
                                     educationalLevels.Senior">(Старшые классы)</span>
                                 <button v-if="isEditFormVisible" type="submit" style="cursor: pointer" 
-                                    @click="onSubjectDelete(ts.id)" class="ms-1 btn-red p-0 ps-1 pe-1">
+                                    @click="onSubjectDeleteClick(ts.id)" class="ms-1 btn-red p-0 ps-1 pe-1">
                                     Открепить от учителя
                                 </button>
                                 </li>
@@ -215,7 +213,7 @@
     import {ref, inject, onMounted, nextTick, computed} from 'vue'
     import Pagination from './Pagination.vue'
     import { userStatusEnum } from '../enums/userStatuses'
-import { educationalLevels } from '../enums/educationalLevels'
+    import { educationalLevels } from '../enums/educationalLevels'
     
     const api = inject('$api')
     const selectedRole = ref('')
@@ -279,7 +277,6 @@ import { educationalLevels } from '../enums/educationalLevels'
     const successMessage = ref('')
     const noUsersFoundErrorMessage = ref('')
     const deleteErrorMessage = ref('')
-    const deleteSuccessMessage = ref('')
     const classErrorMessage = ref('')
     const teacherErrorMessage = ref('')
 
@@ -288,7 +285,6 @@ import { educationalLevels } from '../enums/educationalLevels'
         teacherErrorMessage.value = ''
         classErrorMessage.value = ''
         deleteErrorMessage.value = ''
-        deleteSuccessMessage.value = ''
         successMessage.value = ''
         noUsersFoundErrorMessage.value = ''
         for (const key in errors.value) {
@@ -300,6 +296,8 @@ import { educationalLevels } from '../enums/educationalLevels'
         try{
             const response = await api.getUsersOnPage(null, null, pageSize, 1)
             assignUsersOnChange(response)
+            const classesListResponse = await api.getAllClasses()
+            classes.value = classesListResponse.data
         }
         catch(error){
             console.log(error)
@@ -311,49 +309,27 @@ import { educationalLevels } from '../enums/educationalLevels'
             if(addDto.value.statusId === ''){
                 addDto.value.statusId = null
             }
-            var response = await api.addUser(addDto.value)
-            successMessage.value = response.data
-            response = await api.getUsersOnPage(selectedRole.value, search.value, pageSize, currentPage.value)
+            await api.addUser(addDto.value)
+            successMessage.value = 'Пользователь успешно добавлен!'
+            isAddFormVisible.value = false
+            const response = await api.getUsersOnPage(selectedRole.value, search.value, pageSize, currentPage.value)
             assignUsersOnChange(response)
         }
         catch(error){
-            console.log(error)
-            if(error.response.status === 400){
-                const modelStateErrors = error.response.data.errors
-                console.log(modelStateErrors)
-                for (const field in modelStateErrors){
-                    if(errors.hasOwnProperty(field)){
-                        errors[field] = modelStateErrors[field][0]
-                    }
-                }
-            }
-            if(error.response.status === 409){
-                errors.Login = error.response.data
-            }
+            userErrorHandler(error.response)
         }
     }
     const onUpdateClick = async () => {
         try{
             clearMessages()
-            const response = await api.updateUserDetails(updateDto.value)
-            successMessage.value = response.data
-            const updatedUserIndex = users.value.findIndex(x => x.id === user.value.id)
-            users.value[updatedUserIndex].fullName = `${user.value.lastName} ${user.value.firstName} 
-                ${user.value.middleName}`
+            await api.updateUserDetails(updateDto.value)
+            isEditFormVisible.value = false
+            successMessage.value = 'Данные пользователя упешно обновлены!'
+            const response = await api.getUsersOnPage(selectedRole.value, search.value, pageSize, currentPage.value)
+            assignUsersOnChange(response)
         }
         catch(error){
-            console.log(error)
-            if(error.response.status === 400){
-                const modelStateErrors = error.response.data.errors
-                for (const field in modelStateErrors){
-                    if(errors.value.hasOwnProperty(field)){
-                        errors.value[field] = modelStateErrors[field][0]
-                    }
-                }
-            }
-            if(error.response.status === 409){
-                errors.Login = error.response.data
-            }
+            userErrorHandler(error.response)
         }
     }
     const onStatusDropdownChange = async () => {
@@ -373,25 +349,14 @@ import { educationalLevels } from '../enums/educationalLevels'
             if(error.response.status === 404){
                 noUsersFoundHandler()
             }
+            else{
+                console.log(error.response)
+            }
         }
-    }
-    function onPasswordCheckboxChange (){
-        if(isPasswordInputVisible.value === false){
-            isPasswordInputVisible.value = true
-            return
-        }
-        isPasswordInputVisible.value = false
-        user.value.password = null
     }
     const selectUser = async (id) => {
         try{
-            newClassId.value = ''
-            classOfStudent.value = null
-            allSubjects.value = null
-            teacherSubjects.value = null
-            clearMessages()
-            isAddFormVisible.value = false
-            isPasswordInputVisible.value = false
+            clearValuesOnUserSelect()
             selectedUserId.value = id
             const response = await api.getUserDetails(id)
             Object.assign(user.value, response.data) 
@@ -402,9 +367,7 @@ import { educationalLevels } from '../enums/educationalLevels'
                 block: 'start'
             })
             await assignUserStatus(id)
-            if(selectedUserStatus.value === userStatusEnum.Student){
-                const classesListResponse = await api.getAllClasses()
-                classes.value = classesListResponse.data
+            if(selectedUserStatus.value === userStatusEnum.Student){               
                 const classResponse = await api.getClassOfStudent(id)
                 classOfStudent.value = classResponse.data
             }  
@@ -420,6 +383,9 @@ import { educationalLevels } from '../enums/educationalLevels'
                 teacherErrorMessage.value = 'Преподаватель пока не преподаёт ни один предмет.'
                 classErrorMessage.value = 'Ученику пока не назначен класс.'
             }
+            else{
+                console.log(error.response)
+            }
         }       
     }
     const onSearchButtonClick = async() => {
@@ -433,9 +399,12 @@ import { educationalLevels } from '../enums/educationalLevels'
             if(error.response.status === 404){
                 noUsersFoundHandler()
             }
+            else{
+                console.log(error.response)
+            }
         }
     }
-    const onPageChange = async(page) => {
+    const onPageChangeClick = async(page) => {
         try{
             clearMessages()
             currentPage.value = page
@@ -445,6 +414,9 @@ import { educationalLevels } from '../enums/educationalLevels'
         catch(error){
             if(error.response.status === 404){
                 noUsersFoundHandler()
+            }
+            else{
+                console.log(error.response)
             }
         }        
     }
@@ -457,10 +429,11 @@ import { educationalLevels } from '../enums/educationalLevels'
             console.log(error)
         }
     }
-    const onUserDelete = async() =>{
+    const onUserDeleteClick = async() =>{
         try{
             var response = await api.deleteUser(selectedUserId.value)
-            deleteSuccessMessage.value = response.data
+            isEditFormVisible.value = false
+            successMessage.value = 'Пользователь успешно удалён из системы.'
             response = await api.getUsersOnPage(selectedRole.value, search.value, pageSize, currentPage.value)
             assignUsersOnChange(response)
         }
@@ -497,7 +470,7 @@ import { educationalLevels } from '../enums/educationalLevels'
             }
         }
     }
-    const onSubjectDelete = async(id) => {
+    const onSubjectDeleteClick = async(id) => {
         try{
             clearMessages() 
             const response = await api.deleteTeacherSubject(id)
@@ -527,21 +500,17 @@ import { educationalLevels } from '../enums/educationalLevels'
             assignUsersOnChange(response)
         }
         catch(error){
-            console.log(error)
             var repsonseData = error.response.data
             if(repsonseData.StatusCode === 409){
-                if(repsonseData.ErrorCode === 'INVALID_OPERATION_ERROR'){
-                    classErrorMessage.value = 'Ученик уже находится в этом классе. Выберите другой.'
+                if(repsonseData.Message === `Student can't be transfered to the same class!`){
+                    classErrorMessage.value = 'Нельзя перевести ученика в тот же класс.'
                 }
-                if(repsonseData.ErrorCode === 'ENTITY_NOT_FOUND_ERROR'){
-                    classErrorMessage.value = 'Выбраный класс не найден.'
-                }
-                if(repsonseData.ErrorCode === 'ENTITY_ADDING_ERROR'){
-                    classErrorMessage.value = 'Ошибка при добавлении связей ученика и класса.'
+                else if(repsonseData.Message === 'Selected user is not a student!'){
+                    classErrorMessage.value = 'Выбранный пользователь не является учеником'
                 }
             }
             else if(error.status === 400){
-                classErrorMessage.value = 'Выберите класс!'
+                classErrorMessage.value = 'Выберите класс для перевода ученика!'
             }
         }
     }
@@ -591,5 +560,47 @@ import { educationalLevels } from '../enums/educationalLevels'
         user.value.lastName = ''
         user.value.middleName = ''
         user.value.password = null 
+    }
+    function onPasswordCheckboxChange (){
+        if(isPasswordInputVisible.value === false){
+            isPasswordInputVisible.value = true
+            return
+        }
+        isPasswordInputVisible.value = false
+        user.value.password = null
+    }
+    function clearValuesOnUserSelect(){
+        newClassId.value = ''
+        classOfStudent.value = null
+        allSubjects.value = null
+        teacherSubjects.value = null
+        clearMessages()
+        isAddFormVisible.value = false
+        isPasswordInputVisible.value = false
+    }
+    function userErrorHandler(response)
+    {
+        if(response.status === 400){
+            const modelStateErrors = response.data.errors
+            for (const field in modelStateErrors){
+                if(errors.value.hasOwnProperty(field)){
+                    errors.value[field] = modelStateErrors[field][0]
+                }
+            }
+        }
+        else if(response.status === 409){
+            if(response.data.Message === 'User with the same login already exists!'){
+                errors.value.Login = 'Пользователь с таким логином уже существует!'
+            }
+            else if(response.data.Message === 'User with the same email already exists!'){
+                errors.value.Email = 'Пользователь с такой почтой уже существует!'
+            }
+            else{
+                console.log(response)
+            }
+        }
+        else{
+            console.log(response)
+        }
     }
 </script>

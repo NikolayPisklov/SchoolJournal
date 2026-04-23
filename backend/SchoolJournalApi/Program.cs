@@ -1,3 +1,4 @@
+using EntityFramework.Exceptions.SqlServer;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -32,7 +33,8 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddDbContext<SchoolJournalDbContext>(options => 
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("SchoolJournalConnectionStrings"));   
+    options.UseSqlServer(builder.Configuration.GetConnectionString("SchoolJournalConnectionStrings"));
+    options.UseExceptionProcessor();
 });
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -63,6 +65,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 //Services
+builder.Services.AddScoped<IContextService, ContextService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IClassService, ClassService>();
 builder.Services.AddScoped<ITeacherSubjectService, TeacherSubjectService>();
@@ -71,7 +74,7 @@ builder.Services.AddScoped<IJournalService, JournalService>();
 builder.Services.AddScoped<ILessonService, LessonService>();
 builder.Services.AddScoped<IProgressService, ProgressService>(); 
 
-builder.Services.AddScoped<IContextService,  ContextService>();
+
 //Repos
 builder.Services.AddScoped<IUsersDbService, UserDbService>();
 builder.Services.AddScoped<IClassDbService, ClassDbService>();

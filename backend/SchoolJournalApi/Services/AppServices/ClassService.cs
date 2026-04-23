@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using EntityFramework.Exceptions.Common;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using SchoolJournalApi.Dto_s;
 using SchoolJournalApi.Enum_s;
 using SchoolJournalApi.Exceptions;
@@ -14,9 +16,9 @@ namespace SchoolJournalApi.Services.AppServices
         private readonly IContextService _contextService;
 
 
-        public ClassService(IClassDbService classDbService, ContextService unitOfWork) 
+        public ClassService(IClassDbService classDbService, IContextService contextService) 
         {
-            _contextService = unitOfWork;
+            _contextService = contextService;
             _classDbService = classDbService;
         }
 
@@ -36,63 +38,122 @@ namespace SchoolJournalApi.Services.AppServices
                 _classDbService.AddClass(newClass);
                 await _contextService.SaveChangesAsync();
             }
-            catch (EfDbException ex) 
+            catch (ReferenceConstraintException ex)
             {
-                throw new EntityAddingException("An error has occured while adding class to DB.", ex);
-            }          
+                throw new EntityAddingException("An error has occured while adding Class entity.", ex);
+            }
+            catch (SqlException ex)
+            {
+                throw new EfDbException("An error has occur while connecting to DB!", ex);
+            }
         }
         public async Task UpdateClassAsync(ClassDto classDto)
         {
-            var classEntity = await _classDbService.FindClassAsync(classDto.Id);
-            if (classEntity is null)
+            try
             {
-                throw new EntityNotFoundException("Entity Class can't be found!");
-            }
-            int number = DateTime.Now.Year - (int)classDto.Year!;
-            int eduLevel = GetEducationalLevel(number);
+                var classEntity = await _classDbService.FindClassAsync(classDto.Id);
+                if (classEntity is null)
+                {
+                    throw new EntityNotFoundException("Entity Class can't be found!");
+                }
+                int number = DateTime.Now.Year - (int)classDto.Year!;
+                int eduLevel = GetEducationalLevel(number);
 
-            classEntity.Title = classDto.Title;
-            classEntity.Year = (int)classDto.Year!;
-            classDto.EducationalLevelId = eduLevel;
-            await _contextService.SaveChangesAsync();
+                classEntity.Title = classDto.Title;
+                classEntity.Year = (int)classDto.Year!;
+                classDto.EducationalLevelId = eduLevel;
+                await _contextService.SaveChangesAsync();
+            }
+            catch (ReferenceConstraintException ex)
+            {
+                throw new EntityInUseException("An error has occured while updating Class entity.", ex);
+            }
+            catch (SqlException ex)
+            {
+                throw new EfDbException("An error has occur while connecting to DB!", ex);
+            }            
         }
         public async Task DeleteClassAsync(int classId)
         {
-            var classEntity = await _classDbService.FindClassAsync(classId);
-            if (classEntity is null)
+            try
             {
-                throw new EntityNotFoundException("Entity Class can't be found!");
+                var classEntity = await _classDbService.FindClassAsync(classId);
+                if (classEntity is null)
+                {
+                    throw new EntityNotFoundException("Entity Class can't be found!");
+                }
+                _classDbService.DeleteClass(classEntity);
+                await _contextService.SaveChangesAsync();
             }
-            _classDbService.DeleteClass(classEntity);
-            await _contextService.SaveChangesAsync();
+            catch (ReferenceConstraintException ex)
+            {
+                throw new EntityInUseException("An error has occured while deleting Class entity.", ex);
+            }
+            catch (SqlException ex)
+            {
+                throw new EfDbException("An error has occur while connecting to DB!", ex);
+            }
+            
         }
         public async Task<ClassDto> GetClassDtoAsync(int classId)
-        {
-            var classEntity = await _classDbService.FindClassAsync(classId);
-            if (classEntity is null)
+        {            
+            try
             {
-                throw new EntityNotFoundException("Entity Class can't be found!");
+                var classEntity = await _classDbService.FindClassAsync(classId);
+                if (classEntity is null)
+                {
+                    throw new EntityNotFoundException("Entity Class can't be found!");
+                }
+                ClassDto classDto = new ClassDto();
+                MapClassToClassDto(classEntity, classDto);
+                return classDto;
             }
-            ClassDto classDto = new ClassDto();
-            MapClassToClassDto(classEntity, classDto);
-            return classDto;
+            catch (SqlException ex)
+            {
+                throw new EfDbException("An error has occur while connecting to DB!", ex);
+            }
         }
         public async Task<PagingResultDto<ClassDto>> GetClassesOnPageAsync(int pageSize, int? educationalLevelId, int page = 1)
         {
-            var classes = _classDbService.GetClasses();
-            classes = FilterClasses(classes, educationalLevelId);
-            int numberOfPages = await CalculateNumberOfPagesAsync(classes, pageSize);
-            List<ClassDto> classesDto = await classes.OrderBy(c => c.Year).Skip((page - 1) * pageSize).Take(pageSize)
-                .Select(c => new ClassDto
-                {
-                    Id = c.Id,
-                    EducationalLevelId = c.EducationalLevelId,
-                    Title = c.Title,
-                    Year = c.Year
-                }).ToListAsync();
-            return new PagingResultDto<ClassDto> { Items = classesDto, NumberOfPages = numberOfPages };
+            try
+            {
+                var classes = _classDbService.GetClasses();
+                classes = FilterClasses(classes, educationalLevelId);
+                int numberOfPages = await CalculateNumberOfPagesAsync(classes, pageSize);
+                List<ClassDto> classesDto = await classes.OrderBy(c => c.Year).Skip((page - 1) * pageSize).Take(pageSize)
+                    .Select(c => new ClassDto
+                    {
+                        Id = c.Id,
+                        EducationalLevelId = c.EducationalLevelId,
+                        Title = c.Title,
+                        Year = c.Year
+                    }).ToListAsync();
+                return new PagingResultDto<ClassDto> { Items = classesDto, NumberOfPages = numberOfPages };
+            }
+            catch (SqlException ex)
+            {
+                throw new EfDbException("An error has occur while connecting to DB!", ex);
+            }           
         }
-
+        public async Task<List<ClassDto>> GetAllClassesAsync() 
+        {
+            try
+            {
+                var classes = _classDbService.GetClasses();
+                return await classes.OrderByDescending(c => c.Year)
+                    .ThenBy(c => c.Title).Select(c => new ClassDto
+                    {
+                        Id = c.Id,
+                        Title = c.Title,
+                        Year = c.Year,
+                        EducationalLevelId = c.EducationalLevelId
+                    }).ToListAsync();
+            }
+            catch (SqlException ex)
+            {
+                throw new EfDbException("An error has occur while connecting to DB!", ex);
+            }
+        }
 
         private int GetEducationalLevel(int classYear) 
         {

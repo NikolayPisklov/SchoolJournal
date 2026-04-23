@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using EntityFramework.Exceptions.Common;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using SchoolJournalApi.Dtos.Lesson;
 using SchoolJournalApi.Exceptions;
 using SchoolJournalApi.Models;
@@ -25,34 +27,56 @@ namespace SchoolJournalApi.Services.AppServices
 
         public async Task AddLessonAsync(AddLessonDto lessonDto)
         {
-            var journal = await _journalDbService.FindJournalAsync(lessonDto.JournalId);
-            if (journal == null) 
+            try
             {
-                throw new EntityNotFoundException("Journal is not found!");
+                var journal = await _journalDbService.FindJournalAsync(lessonDto.JournalId);
+                if (journal == null)
+                {
+                    throw new EntityNotFoundException("Journal is not found!");
+                }
+                ValidateLessonDate(lessonDto.LessonDate, journal.Year);
+                var newLesson = new Lesson
+                {
+                    JournalId = lessonDto.JournalId,
+                    LessonDate = (DateOnly)lessonDto.LessonDate!
+                };
+                _lessonDbService.AddLesson(newLesson);
+                await _contextService.SaveChangesAsync();
             }
-            ValidateLessonDate(lessonDto.LessonDate, journal.Year);
-            var newLesson = new Lesson
+            catch (ReferenceConstraintException ex)
             {
-                JournalId = lessonDto.JournalId,
-                LessonDate = (DateOnly)lessonDto.LessonDate!
-            };
-            _lessonDbService.AddLesson(newLesson);
-            await _contextService.SaveChangesAsync();
+                throw new EntityAddingException("An error has occured while adding Lesson entity to DB.", ex);
+            }
+            catch (SqlException ex)
+            {
+                throw new EfDbException("An error has occurred while reading data from DB!", ex);
+            }            
         }
 
         public async Task DeleteLessonAsync(int lessonId)
         {
-            var lesson = await _lessonDbService.FindLessonAsync(lessonId);
-            if(lesson is null)
+            try
             {
-                throw new EntityNotFoundException($"Lesson with Id: {lessonId} is not found!");
+                var lesson = await _lessonDbService.FindLessonAsync(lessonId);
+                if (lesson is null)
+                {
+                    throw new EntityNotFoundException($"Lesson with Id: {lessonId} is not found!");
+                }
+                if (lesson.LessonDate <= DateOnly.FromDateTime(DateTime.Now))
+                {
+                    throw new BusinessLogicException("Cannot delete lesson after it is being teached");
+                }
+                _lessonDbService.DeleteLesson(lesson);
+                await _contextService.SaveChangesAsync();
             }
-            if (lesson.LessonDate <= DateOnly.FromDateTime(DateTime.Now))
+            catch (ReferenceConstraintException ex)
             {
-                throw new BusinessLogicException("Cannot delete lesson after it is being teached");
+                throw new EntityInUseException("An error has occured while deleting Lesson entity from DB.", ex);
             }
-            _lessonDbService.DeleteLesson(lesson);
-            await _contextService.SaveChangesAsync();
+            catch (SqlException ex)
+            {
+                throw new EfDbException("An error has occurred while reading data from DB!", ex);
+            }
         }
 
         public async Task<List<LessonDto>> GetLessonsForJournalAsync(int journalId, int month, int journalYear)
@@ -70,7 +94,7 @@ namespace SchoolJournalApi.Services.AppServices
                     Homework = l.Homework,
                 }).ToListAsync();
             }
-            catch (DbException ex) 
+            catch (SqlException ex) 
             {
                 throw new EfDbException("Error while reading data!", ex);
             }            
@@ -78,18 +102,25 @@ namespace SchoolJournalApi.Services.AppServices
 
         public async Task UpdateLessonDetailsAsync(int lessonId, LessonDetailsUpdateDto detailsDto)
         {
-            var lesson = await _lessonDbService.FindLessonAsync(lessonId);
-            if (lesson is null)
+            try
             {
-                throw new EntityNotFoundException($"Lesson with Id: {lessonId} is not found!");
+                var lesson = await _lessonDbService.FindLessonAsync(lessonId);
+                if (lesson is null)
+                {
+                    throw new EntityNotFoundException($"Lesson with Id: {lessonId} is not found!");
+                }
+                if (lesson.LessonDate <= DateOnly.FromDateTime(DateTime.Now))
+                {
+                    throw new BusinessLogicException("Cannot update lesson after it is being teached");
+                }
+                lesson.Homework = detailsDto.Homework;
+                lesson.Theme = detailsDto.Theme;
+                await _contextService.SaveChangesAsync();
             }
-            if (lesson.LessonDate <= DateOnly.FromDateTime(DateTime.Now))
+            catch (SqlException ex)
             {
-                throw new BusinessLogicException("Cannot update lesson after it is being teached");
-            }
-            lesson.Homework = detailsDto.Homework;
-            lesson.Theme = detailsDto.Theme;
-            await _contextService.SaveChangesAsync();
+                throw new EfDbException("Error while reading data!", ex);
+            }            
         }
 
         private bool IsLessonDateValidToJournalYear(int journalYear, DateOnly lessonDate)

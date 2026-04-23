@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using EntityFramework.Exceptions.Common;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using SchoolJournalApi.Dtos.Journal;
 using SchoolJournalApi.Dtos.Lesson;
 using SchoolJournalApi.Dtos.Progress;
@@ -26,44 +28,73 @@ namespace SchoolJournalApi.Services.AppServices
 
         public async Task AddJournalAsync(JournalCreationDto dto)
         {
-            if(!await _journalDbService.IsThereSameJournal(dto.ClassId, dto.TeacherSubjectId, dto.JournalYear)) 
+            try
             {
-                throw new EntityAlreadyExistsException("Entity Journal with this parameters for this year already exists!");
+                if (!await _journalDbService.IsThereSameJournal(dto.ClassId, dto.TeacherSubjectId, dto.JournalYear))
+                {
+                    throw new EntityAlreadyExistsException("Entity Journal with this parameters for this year already exists!");
+                }
+                var newJournal = new Journal();
+                newJournal.ClassId = dto.ClassId;
+                newJournal.TeacherSubjectId = dto.TeacherSubjectId;
+                newJournal.Year = DateTime.Now.Year;
+                _journalDbService.AddJournal(newJournal);
+                await _contextService.SaveChangesAsync();
             }
-            var newJournal = new Journal();
-            newJournal.ClassId = dto.ClassId;
-            newJournal.TeacherSubjectId = dto.TeacherSubjectId;
-            newJournal.Year = DateTime.Now.Year;
-            _journalDbService.AddJournal(newJournal);
-            await _contextService.SaveChangesAsync();
+            catch(ReferenceConstraintException ex)
+            {
+                throw new EntityAddingException("An error has occured while adding Journal entity to DB.", ex);
+            }
+            catch (SqlException ex)
+            {
+                throw new EfDbException("An error has occurred while reading data from DB!", ex);
+            }            
         }
         public async Task DeleteJournalAsync(int journalId)
         {
-            var journal = await _journalDbService.FindJournalAsync(journalId);
-            if (journal is null)
+            try
             {
-                throw new EntityNotFoundException($"Journal entity with Id: {journalId} is not found!");
+                var journal = await _journalDbService.FindJournalAsync(journalId);
+                if (journal is null)
+                {
+                    throw new EntityNotFoundException($"Journal entity with Id: {journalId} is not found!");
+                }
+                _journalDbService.DeleteJournal(journal);
+                await _contextService.SaveChangesAsync();
             }
-            _journalDbService.DeleteJournal(journal);
-            await _contextService.SaveChangesAsync();
+            catch (ReferenceConstraintException ex)
+            {
+                throw new EntityInUseException("An error has occured while deleting Journal entity from DB.", ex);
+            }
+            catch (SqlException ex)
+            {
+                throw new EfDbException("An error has occurred while reading data from DB!", ex);
+            }
         }
         public async Task<JournalDetailsDto> GetJournalDetailsAsync(int journalId)
         {
-            var journal = await _journalDbService.FindJournalAsync(journalId);
-            if (journal is null)
+            try
             {
-                throw new EntityNotFoundException($"Journal entity with Id: {journalId} is not found!");
+                var journal = await _journalDbService.FindJournalAsync(journalId);
+                if (journal is null)
+                {
+                    throw new EntityNotFoundException($"Journal entity with Id: {journalId} is not found!");
+                }
+                var studentsQuery = _journalDbService.GetStudentsForJournal(journalId);
+                var lessonsQuery = _journalDbService.GetLessonsForJournal(journalId, journal.Year);
+                var progressesQuery = _journalDbService.GetProgressesForJournal(journalId);
+                return new JournalDetailsDto
+                {
+                    Students = await SelectUsersAsync(studentsQuery),
+                    Lessons = await SelectLessonsAsync(lessonsQuery),
+                    Progresses = await SelectProgressesAsync(progressesQuery),
+                    JournalYear = journal.Year
+                };
             }
-            var studentsQuery = _journalDbService.GetStudentsForJournal(journalId);
-            var lessonsQuery = _journalDbService.GetLessonsForJournal(journalId, journal.Year);
-            var progressesQuery = _journalDbService.GetProgressesForJournal(journalId);
-            return new JournalDetailsDto
+            catch (SqlException ex)
             {
-                Students = await SelectUsersAsync(studentsQuery),
-                Lessons = await SelectLessonsAsync(lessonsQuery),
-                Progresses = await SelectProgressesAsync(progressesQuery),
-                JournalYear = journal.Year
-            };
+                throw new EfDbException("An error has occurred while reading data from DB!", ex);
+            }
         }
         public Task<JournalDetailsDto> GetJournalDetailsForStudentAsync(int journalId)
         {
@@ -88,19 +119,26 @@ namespace SchoolJournalApi.Services.AppServices
                     JournalYear = j.Year
                 }).ToListAsync();
             }
-            catch(DbException ex) 
+            catch (SqlException ex)
             {
-                throw new EntityAddingException("An error has occurred while reading data from DB!", ex);
+                throw new EfDbException("An error has occurred while reading data from DB!", ex);
             }
         }
         public async Task<List<JournalInListDto>> GetJournalsForStudent(int studentId)
         {
-            var studentClass = await _journalDbService.FindStudentClassAsync(studentId);
-            if(studentClass is null) 
+            try
             {
-                throw new EntityNotFoundException($"Class for student with Id: {studentId} is not found!");
+                var studentClass = await _journalDbService.FindStudentClassAsync(studentId);
+                if (studentClass is null)
+                {
+                    throw new EntityNotFoundException($"Class for student with Id: {studentId} is not found!");
+                }
+                return await GetJournalsForClassAsync(studentClass.ClassId);
             }
-            return await GetJournalsForClassAsync(studentClass.ClassId);
+            catch (SqlException ex)
+            {
+                throw new EfDbException("An error has occurred while reading data from DB!", ex);
+            }
         }
         public Task<List<JournalGroupDto>> GetJournalsForTeacherAsync(int teacherId)
         {
@@ -132,24 +170,31 @@ namespace SchoolJournalApi.Services.AppServices
                        }).ToList()
                    }).ToListAsync();
             }
-            catch (DbException ex)
+            catch (SqlException ex)
             {
-                throw new EntityAddingException("An error has occurred while reading data from DB!", ex);
+                throw new EfDbException("An error has occurred while reading data from DB!", ex);
             }           
         }
         public async Task<JournalTitleDto> GetJournalTitleAsync(int journalId)
         {
-            var journal = await _journalDbService.FindJournalWithIncludes(journalId);
-            if (journal is null)
+            try
             {
-                throw new EntityNotFoundException($"Journal entity with Id: {journalId} is not found!");
+                var journal = await _journalDbService.FindJournalWithIncludes(journalId);
+                if (journal is null)
+                {
+                    throw new EntityNotFoundException($"Journal entity with Id: {journalId} is not found!");
+                }
+                return new JournalTitleDto
+                {
+                    ClassTitle = journal.Class.Title,
+                    ClassYear = journal.Class.Year,
+                    SubjectTitle = journal.TeacherSubject.Subject.Title
+                };
             }
-            return new JournalTitleDto
+            catch (SqlException ex)
             {
-                ClassTitle = journal.Class.Title,
-                ClassYear = journal.Class.Year,
-                SubjectTitle = journal.TeacherSubject.Subject.Title
-            };
+                throw new EfDbException("An error has occurred while reading data from DB!", ex);
+            }
         }
 
 
@@ -167,9 +212,9 @@ namespace SchoolJournalApi.Services.AppServices
                     ProgressUpdateTime = p.ProgressUpdateDate
                 }).ToListAsync();
             }
-            catch (DbException ex)
+            catch (SqlException ex)
             {
-                throw new EntityAddingException("An error has occurred while reading data from DB!", ex);
+                throw new EfDbException("An error has occurred while reading data from DB!", ex);
             }
         }
         private async Task<List<LessonDto>> SelectLessonsAsync(IQueryable<Lesson> lessonsQuery) 
@@ -185,9 +230,9 @@ namespace SchoolJournalApi.Services.AppServices
                     Homework = l.Homework,
                 }).ToListAsync();
             }
-            catch (DbException ex)
+            catch (SqlException ex)
             {
-                throw new EntityAddingException("An error has occurred while reading data from DB!", ex);
+                throw new EfDbException("An error has occurred while reading data from DB!", ex);
             }
         }
         private async Task<List<ListedStudentDto>> SelectUsersAsync(IQueryable<StudentClass> studentsQuery) 
@@ -202,9 +247,9 @@ namespace SchoolJournalApi.Services.AppServices
                     MiddleName = sc.Student.MiddleName
                 }).ToListAsync();
             }
-            catch (DbException ex)
+            catch (SqlException ex)
             {
-                throw new EntityAddingException("An error has occurred while reading data from DB!", ex);
+                throw new EfDbException("An error has occurred while reading data from DB!", ex);
             }
         }
     }
