@@ -4,6 +4,5 @@
     {
         public int TeacherSubjectId {  get; set; }
         public int ClassId { get; set; }
-        public int JournalYear { get; set; }
     }
 }

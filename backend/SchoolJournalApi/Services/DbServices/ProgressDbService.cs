@@ -47,6 +47,11 @@ namespace SchoolJournalApi.Services.DbServices
             return _db.Progresses.AsNoTracking()
                 .Where(p => p.Lesson!.JournalId == journalId && p.IsUpdated == false);
         }
+        public IQueryable<Progress> GetProgressesForStudentJournal(int journalId, int studentId)
+        {
+            return _db.Progresses.AsNoTracking()
+                .Where(p => p.Lesson.JournalId == journalId && p.IsUpdated == false && p.UserId == studentId);
+        }
         public IQueryable<Progress> GetProgressesForStudentStatistic(int studentId, int journalId) 
         {
             return _db.Progresses.AsNoTracking().Where(p => p.UserId == studentId && p.Lesson.JournalId == journalId

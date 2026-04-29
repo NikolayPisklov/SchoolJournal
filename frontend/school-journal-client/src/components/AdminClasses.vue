@@ -31,18 +31,25 @@
                     @change="onPageChange"
                 />
             </div>
+            <span v-if="classSuccessMessage != ''" class="text-green-700 block">{{ classSuccessMessage }}</span>
             <div v-if="isClassFormVisible" class="col-span-2 ms-3">
                 <span v-if="isEditFormVisible">Форма редактирования выбранного класса</span>
                 <span v-if="isAddingFormVisible">Форма добавления класса</span>
-                <span v-if="classSuccessMessage != ''" class="text-green-700 block">{{ classSuccessMessage }}</span>
+                
                 <span v-if="classErrorMessage != ''" class="error block">{{ classErrorMessage }}</span>
                 <form @submit.prevent="submitForm">
                     <label for="title" class="block">Название класса</label>
                     <span class="error block" v-if="errors.Title !== ''">{{ errors.Title }}</span>
-                    <input class="text-box" v-model="theClass.title"/>
-                    <label for="title" class="block">Год набора класса</label>
-                    <span class="error block" v-if="errors.Year !== ''">{{ errors.Year }}</span>
-                    <input class="text-box" v-model="theClass.year"/>
+                    <input class="text-box" v-model="selectedClass.title"/>
+                    <div v-if="isAddingFormVisible">
+                        <label for="title" class="block">Год набора класса</label>
+                        <span class="error block" v-if="errors.Year !== ''">{{ errors.Year }}</span>
+                        <input class="text-box" v-model="selectedClass.year"/>
+                    </div>
+                    <div v-if="isEditFormVisible">
+                        <label for="title" class="block">Год набора класса</label>
+                        <input :disabled="true" class="text-box text-gray-400" v-model="selectedClass.year"/>
+                    </div>
                 </form>
                 <div v-if="isAddingFormVisible">
                     <button @click="onAddClassClick" type="submit" style="cursor: pointer"
@@ -63,7 +70,7 @@
                     </button>
                 </div>
             </div>
-            <div v-if="isClassFormVisible" class="col-span-3 ms-3">
+            <div v-if="isClassFormVisible && selectedClassId" class="col-span-3 ms-3">
                 <p>Журналы выбранного класса:</p>
                 <span class="error block">{{ journalsError }}</span>
                 <form @submit.prevent="submitForm" class="">
@@ -85,17 +92,22 @@
                         </li>
                     </ul>
                     <div>
-                        <p>Добавить журнал для выбранного класса:</p>
-                        <select class="text-box ms-1 mt-2" v-model="selectedTeacherSubjectId">
-                            <option disabled value="">Выберите предмет</option>
-                            <option v-for="ts in allTeacherSubjects"
-                                :key="ts"
-                                :value="ts.id">
-                                {{ ts.subjectTitle }} - 
-                                {{ ts.teacherLastName }} {{  ts.teacherFirstName[0]}}.
-                                {{ ts.teacherMiddleName[0]}}.
-                            </option>
-                        </select>
+                        <div>
+                            <span>Добавить журнал для выбранного класса:</span>
+                        </div>
+                        <div>
+                            <span>Выберите предмет:</span>
+                            <select class="text-box ms-1 mt-2" v-model="selectedTeacherSubjectId">
+                                <option disabled value="">Выберите предмет</option>
+                                <option v-for="ts in allTeacherSubjects"
+                                    :key="ts"
+                                    :value="ts.id">
+                                    {{ ts.subjectTitle }} - 
+                                    {{ ts.teacherLastName }} {{  ts.teacherFirstName[0]}}.
+                                    {{ ts.teacherMiddleName[0]}}.
+                                </option>
+                            </select>
+                        </div>
                         <button class="btn-primary block mt-2"
                             type="submit"
                             @click="onJournalAddClick">
@@ -125,20 +137,20 @@
     const selectedClassId = ref(null)
     const selectedTeacherSubjectId = ref('')
 
-    const theClass = ref({
+    const selectedClass = ref({
         id: null,
         educationalLevelId: null,
         year: null,
         title: ''
     })
     const addDto = computed(() => ({
-        year: theClass.value.year,
-        title: theClass.value.title
+        year: selectedClass.value.year,
+        title: selectedClass.value.title
     }))
     const updateDto = computed(() => ({
-        id: theClass.value.id,
-        year: theClass.value.year,
-        title: theClass.value.title
+        id: selectedClass.value.id,
+        year: selectedClass.value.year,
+        title: selectedClass.value.title
     })) 
 
     const currentPage = ref(1)
@@ -157,22 +169,32 @@
     onMounted(async () => {
         try{
             const response = await api.getClassesOnPage(pageSize, selectedEducationalLevel.value, currentPage.value)
-            assignUsersOnChange(response)
+            assignClassesOnChange(response)
         }
         catch(error){
-            console.log(error)
+            if(error.response.status === 404){
+                classes.value = null
+                classesSearchError.value = 'Классов по вашему запросу не найдено.'
+            }
+            else{
+                console.log(error.response)
+            }           
         }
     })
     const onEduLevelChange = async () => {
         try{
+            isClassFormVisible.value = false
             clearMessages()
             const response = await api.getClassesOnPage(pageSize, selectedEducationalLevel.value, currentPage.value)
-            assignUsersOnChange(response)
+            assignClassesOnChange(response)
         }
         catch(error){
-            if(error.status === 404){
+            if(error.response.status === 404){
                 classes.value = null
                 classesSearchError.value = 'Классов по вашему запросу не найдено.'
+            }
+            else{
+                console.log(error.response)
             }
         }      
     }
@@ -181,12 +203,15 @@
             clearMessages()
             currentPage.value = page
             const response = await api.getClassesOnPage(pageSize, selectedEducationalLevel.value, currentPage.value)
-            assignUsersOnChange(response)
+            assignClassesOnChange(response)
         }
         catch(error){
-            if(error.status === 404){
+            if(error.response.status === 404){
                 classes.value = null
                 classesSearchError.value = 'Классов по вашему запросу не найдено.'
+            }
+            else{
+                console.log(error.response)
             }
         }
     }
@@ -197,13 +222,13 @@
             selectedClassId.value = id
             isClassFormVisible.value = true
             const classResponse = await api.getClassDetails(selectedClassId.value)
-            Object.assign(theClass.value, classResponse.data)
+            Object.assign(selectedClass.value, classResponse.data)
             isEditFormVisible.value = true
             await getJournalsForClass(id)
             await getAllTeacherSubject()
         }
         catch(error){
-            console.log(error)
+            console.log(error.response)
         }       
     }
     const onClassDeleteClick = async() =>{
@@ -211,17 +236,25 @@
             clearMessages()
             await api.deleteClass(selectedClassId.value)
             const response = await api.getClassesOnPage(pageSize, selectedEducationalLevel.value, currentPage.value)
-            assignUsersOnChange(response)
+            assignClassesOnChange(response)
             classSuccessMessage.value = 'Класс успешно удалён!'
+            isClassFormVisible.value = false
         }
         catch(error){
-            if(error.status === 404){
+            if(error.response.status === 404){
                 classErrorMessage.value = 'Выбранный класс не найден!'
             }
-            if(error.status === 409){
-                classErrorMessage.value = 'У выбранного класса присутствуют журналы и он не может быть удалён.'
+            else if(error.response.status === 409){
+                if(error.response.data.Message === "There are students attached to the class."){
+                    classErrorMessage.value = 'Класс не может быть удалён пока за ним закреплены ученики.'
+                }
+                else{
+                    classErrorMessage.value = 'Класс не может быть удалён пока за ним закреплены журналы.'
+                }
             }
-            console.log(error)
+            else{
+                console.log(error.response)
+            }
         }
     }
     const onAddClassClick = async () =>{
@@ -229,7 +262,8 @@
             clearMessages()
             await api.addClass(addDto.value)
             const response = await api.getClassesOnPage(pageSize, selectedEducationalLevel.value, currentPage.value)
-            assignUsersOnChange(response)
+            assignClassesOnChange(response)
+            isClassFormVisible.value = false
             classSuccessMessage.value = 'Класс успешно добавлен!'
         }
         catch(error){
@@ -244,7 +278,9 @@
             if(error.status === 409){
                 classErrorMessage.value = 'Произошла ошибка при добавлении данных! Повторите попытку позже.'
             }
-            console.log(error)   
+            else{
+                console.log(error.response) 
+            }  
         }
     }
     const onEditClassClick = async () =>{
@@ -253,7 +289,8 @@
             await api.updateClass(updateDto.value)
             const response = await api.getClassesOnPage(pageSize, selectedEducationalLevel.value,
                 currentPage.value)
-            assignUsersOnChange(response)
+            assignClassesOnChange(response)
+            isClassFormVisible.value = false    
             classSuccessMessage.value = 'Данные класса успешно обновлены!'
             await getJournalsForClass()
         }
@@ -269,7 +306,7 @@
             if(error.status === 409){
                 classErrorMessage.value = 'Произошла ошибка при обновлении данных! Повторите попытку позже.'
             }
-            console.log(error)
+            console.log(error.response)
         }
     }
     const getJournalsForClass = async () =>{
@@ -282,12 +319,14 @@
                 journals.value = []
                 journalsError.value = 'Для выбранного класса не найдено журналов.'
             }
-            console.log(error)
+            else{
+                console.log(error.response)
+            }
         }        
     }
     const getAllTeacherSubject = async () =>{
         try{           
-            const response = await api.getAllTeacherSubjects(theClass.value.educationalLevelId)
+            const response = await api.getAllTeacherSubjects(selectedClass.value.educationalLevelId)
             allTeacherSubjects.value = response.data
         }
         catch(error){
@@ -338,23 +377,24 @@
         }
         classesSearchError.value = ''
         classSuccessMessage.value = ''
+        classErrorMessage.value = ''
         journalsError.value = ''
     }
-    function assignUsersOnChange(response){
+    function assignClassesOnChange(response){
         classes.value = response.data.items
         numberOfPages.value = response.data.numberOfPages
     }
     function onAddFormShowClick(){
+        selectedClassId.value = null
         clearMessages()
         isClassFormVisible.value = true
         isAddingFormVisible.value = true
         isEditFormVisible.value = false
-        theClass.value.title = ''
-        theClass.value.year = null
+        selectedClass.value.title = ''
+        selectedClass.value.year = null
     }
     function navigateToClassJournal(journalId){
         try{
-            debugger
             router.push(`/journal/${journalId}`)
         }
         catch(error){

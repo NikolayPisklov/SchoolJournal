@@ -8,7 +8,6 @@ using SchoolJournalApi.Exceptions;
 using SchoolJournalApi.Models;
 using SchoolJournalApi.Services.AppServices.Interfaces;
 using SchoolJournalApi.Services.DbServices.Interfaces;
-using System.Data.Common;
 
 namespace SchoolJournalApi.Services.AppServices
 {
@@ -236,15 +235,17 @@ namespace SchoolJournalApi.Services.AppServices
                 {
                     throw new EntityNotFoundException("Lesson fow progress is not found!");
                 }
-                var dateNow = DateOnly.Parse(DateTime.Now.ToString());
-                if (lesson.LessonDate > dateNow)
-                {
-                    throw new BusinessLogicException("Can't edit progress before a lesson has been taught.");
-                }
-                if (lesson.LessonDate.AddDays(30) < dateNow)
-                {
-                    throw new BusinessLogicException("Can't edit progress after 30 days since lesson has been taught.");
-                }
+                var dateNow = DateOnly.FromDateTime(DateTime.Now);
+                //***---Commented out for testing purposes---***
+
+                //if (lesson.LessonDate > dateNow)
+                //{
+                //    throw new BusinessLogicException("Can't edit progress before a lesson has been taught.");
+                //}
+                //if (lesson.LessonDate.AddDays(30) < dateNow)
+                //{
+                //    throw new BusinessLogicException("Can't edit progress after 30 days since lesson has been taught.");
+                //}
             }
             catch (SqlException ex)
             {

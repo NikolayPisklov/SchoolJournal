@@ -131,7 +131,16 @@
         datasets: null 
     })
     const chartOptions = {
-        responsive: true
+        responsive: true,
+        scales: {
+            y: {
+                min: 1,
+                max: 5,
+                ticks: {
+                    stepSize: 1
+                }
+            },
+        }
     }
 
     const isStatisticWindowOpen = ref(false)
@@ -154,12 +163,14 @@
                         label: 'Средняя оценка',
                         data: responseData.avgMarks,
                         borderColor: 'blue',
+                        clip: 50,
                         tension: 0.3
                     },
                     {
                         label: 'Фактичесая оценка',
                         data: responseData.factMarks,
                         borderColor: 'lightgray',
+                        clip: 50,
                         tension: 0.3
                     }
                 ]

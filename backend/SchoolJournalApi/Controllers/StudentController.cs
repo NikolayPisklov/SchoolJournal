@@ -28,7 +28,7 @@ namespace SchoolJournalApi.Controllers
         [HttpGet("get-journal-details-for-student")]
         public async Task<IActionResult> GetJournalDetailsForStudent(int journalId, int studentId)
         {
-            var details = await _journalService.GetJournalDetailsForStudentAsync(journalId);
+            var details = await _journalService.GetJournalDetailsForStudentAsync(journalId, studentId);
             return Ok(details);
         }
     }

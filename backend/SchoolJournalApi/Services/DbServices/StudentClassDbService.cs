@@ -11,6 +11,12 @@ namespace SchoolJournalApi.Services.DbServices
     {
         public StudentClassDbService(SchoolJournalDbContext db) : base(db) { }
 
+
+        public IQueryable<StudentClass> GetStudentsForJournal(int classId)
+        {
+            return _db.StudentClasses.AsNoTracking()
+                .Where(sc => sc.ClassId == classId).OrderBy(sc => sc.Student.LastName);
+        }
         public async Task<bool> IsStudent(int userId) 
         {
             return await _db.Users.AnyAsync(u => u.Id == userId && u.StatusId == (int)UserStatuses.Student);

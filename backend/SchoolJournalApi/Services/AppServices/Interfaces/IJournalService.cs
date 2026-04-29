@@ -10,7 +10,7 @@ namespace SchoolJournalApi.Services.AppServices.Interfaces
         Task<List<JournalGroupDto>> GetJournalsForTeacherAsync(int teacherId);
         Task<List<JournalInListDto>> GetJournalsForStudent(int studentId);
         Task<JournalDetailsDto> GetJournalDetailsAsync(int journalId);
-        Task<JournalDetailsDto> GetJournalDetailsForStudentAsync(int journalId);
+        Task<JournalDetailsDto> GetJournalDetailsForStudentAsync(int journalId, int studentId);
         Task<JournalTitleDto> GetJournalTitleAsync(int journalId);
     }
 }

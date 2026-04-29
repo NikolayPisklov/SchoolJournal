@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using SchoolJournalApi.Exceptions;
 using SchoolJournalApi.Models;
 using SchoolJournalApi.Services.DbServices.Interfaces;
@@ -26,6 +27,28 @@ namespace SchoolJournalApi.Services.DbServices
         public IQueryable<Class> GetClasses() 
         {
             return _db.Classes.AsNoTracking();
+        }
+        public async Task<bool> IsThereStudentsInClass(int classId)
+        {
+            try
+            {
+                return await _db.StudentClasses.Where(x => x.ClassId == classId && x.IsActive).AnyAsync();
+            }
+            catch(SqlException ex)
+            {
+                throw new EfDbException("An error has occured while reading data from DB.", ex);
+            }
+        }
+        public async Task<bool> IsThereJournalsForClass(int classId, int year)
+        {
+            try
+            {
+                return await _db.Journals.Where(x => x.ClassId == classId && x.Year == year).AnyAsync();
+            }
+            catch (SqlException ex)
+            {
+                throw new EfDbException("An error has occured while reading data from DB.", ex);
+            }            
         }
     }
 }

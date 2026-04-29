@@ -38,6 +38,10 @@ namespace SchoolJournalApi.Services.DbServices
                 && l.IsDeleted == false)
                 .OrderBy(l => l.LessonDate);
         }
+        public IQueryable<Lesson> GetAllLessonsForJournal(int journalId)
+        {
+            return _db.Lessons.AsNoTracking().Where(l => l.JournalId == journalId).OrderBy(l => l.LessonDate);
+        }
         public async Task SaveChangesAsync() 
         {
             try

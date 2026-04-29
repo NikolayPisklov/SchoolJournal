@@ -26,10 +26,10 @@ namespace SchoolJournalApi.Services.AppServices
             try
             {
                 var studentClasses = _studentClassDbService.GetStudentClassForClass(classId);
-                return await studentClasses.Select(s => s.Student)
+                return await studentClasses.OrderByDescending(sc => sc.Student.LastName).Select(s => s.Student)
                     .Select(s => new ListedStudentDto
                     {
-                        Id = s!.Id,
+                        Id = s.Id,
                         FirstName = s.FirstName,
                         LastName = s.LastName,
                         MiddleName = s.MiddleName

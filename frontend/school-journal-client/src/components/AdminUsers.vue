@@ -455,7 +455,6 @@
                 userId: selectedUserId.value,
                 subjectId: selectedSubjectId.value
             }
-            console.log(dto)
             const addingResponse = await api.addTeacherSubject(dto)
             const subjectsResponse = await api.getSubjectsForTeacher(selectedUserId.value)
             teacherSubjects.value = subjectsResponse.data
@@ -483,7 +482,7 @@
                 teacherErrorMessage.value = 'Преподаватель пока не преподаёт ни один предмет.'
             }
             else if(error.response.status === 409){
-                teacherErrorMessage.value = 'Ошибка при удалении. \n Преподаватель закреплён за журналом по этому предмету!'
+                teacherErrorMessage.value = 'Ошибка при удалении. Преподаватель закреплён за журналом по этому предмету!'
             }
         }
     }

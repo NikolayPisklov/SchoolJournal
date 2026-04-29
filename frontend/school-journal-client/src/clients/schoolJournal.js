@@ -329,6 +329,16 @@ export async function addLesson(addLessonDto){
     throw error
   }
 }
+export async function deleteLesson(lessonId){
+  try{
+    const response = await schoolJournalClient.delete('Teacher/delete-lesson', 
+      {params:{lessonId: lessonId}})
+    return response
+  }
+  catch(error){
+    throw error
+  }
+}
 export async function getLessonsForJournal(journalId, month, journalYear){
   try{
     const response = await schoolJournalClient.get('Teacher/get-lessons-for-journal',
@@ -383,3 +393,4 @@ export async function getJournalDetailsForStudent(journalId, studentId){
     throw error
   }
 }
+

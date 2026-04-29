@@ -9,5 +9,6 @@ namespace SchoolJournalApi.Services.DbServices.Interfaces
         Task<Lesson?> FindLessonAsync(int lessonId);
         void DeleteLesson(Lesson lesson);
         IQueryable<Lesson> GetLessonsForJournal(int journalId, int month, int journalYear);
+        IQueryable<Lesson> GetAllLessonsForJournal(int journalId);
     }
 }

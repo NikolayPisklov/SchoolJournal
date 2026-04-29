@@ -61,7 +61,7 @@ namespace SchoolJournalApi.Services.AppServices
 
                 classEntity.Title = classDto.Title;
                 classEntity.Year = (int)classDto.Year!;
-                classDto.EducationalLevelId = eduLevel;
+                classEntity.EducationalLevelId = eduLevel;
                 await _contextService.SaveChangesAsync();
             }
             catch (ReferenceConstraintException ex)
@@ -81,6 +81,14 @@ namespace SchoolJournalApi.Services.AppServices
                 if (classEntity is null)
                 {
                     throw new EntityNotFoundException("Entity Class can't be found!");
+                }
+                if (await _classDbService.IsThereStudentsInClass(classId))
+                {
+                    throw new BusinessLogicException("There are students attached to the class.");
+                }
+                if(await _classDbService.IsThereJournalsForClass(classId, SchoolYearService.GetCurrentSchoolYear()))
+                {
+                    throw new BusinessLogicException("There are journals attached to the class.");
                 }
                 _classDbService.DeleteClass(classEntity);
                 await _contextService.SaveChangesAsync();

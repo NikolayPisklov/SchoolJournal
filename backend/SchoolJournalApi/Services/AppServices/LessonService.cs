@@ -6,7 +6,6 @@ using SchoolJournalApi.Exceptions;
 using SchoolJournalApi.Models;
 using SchoolJournalApi.Services.AppServices.Interfaces;
 using SchoolJournalApi.Services.DbServices.Interfaces;
-using System.Data.Common;
 
 namespace SchoolJournalApi.Services.AppServices
 {
@@ -83,8 +82,7 @@ namespace SchoolJournalApi.Services.AppServices
         {
             try
             {
-                int realYear = month >= 9 ? journalYear : journalYear + 1;
-                var lessonsQuery = _lessonDbService.GetLessonsForJournal(journalId, month, realYear);
+                var lessonsQuery = _lessonDbService.GetLessonsForJournal(journalId, month, journalYear);
                 return await lessonsQuery.Select(l => new LessonDto
                 {
                     Id = l.Id,
@@ -109,7 +107,7 @@ namespace SchoolJournalApi.Services.AppServices
                 {
                     throw new EntityNotFoundException($"Lesson with Id: {lessonId} is not found!");
                 }
-                if (lesson.LessonDate <= DateOnly.FromDateTime(DateTime.Now))
+                if (lesson.LessonDate < DateOnly.FromDateTime(DateTime.Now))
                 {
                     throw new BusinessLogicException("Cannot update lesson after it is being teached");
                 }

@@ -7,6 +7,7 @@ namespace SchoolJournalApi.Services.DbServices.Interfaces
         IQueryable<Mark> GetMarks();
         IQueryable<Attendance> GetAttendances();
         IQueryable<Progress> GetProgressesForJournal(int journalId);
+        IQueryable<Progress> GetProgressesForStudentJournal(int journalId, int studentId);
         IQueryable<Progress> GetProgressesForStudentStatistic(int studentId, int journalId);
         void AddProgress(Progress progress);
         Task<Progress?> FindProgressAsync(int progressId);

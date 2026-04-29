@@ -10,8 +10,15 @@
             <thead>
                 <tr>
                     <th class="p-1 border border-gray-500 w-auto bg-gray-100">Ученики</th>
-                    <th v-for="l in lessons" class="p-1 border border-gray-500 w-[60px] bg-gray-100">
-                        {{ new Date(l.lessonDate).getDate() }}.{{ new Date(l.lessonDate).getMonth() + 1}}
+                    <th v-if="session.role === 'teacher'" 
+                        v-for="l in lessons" class="p-1 border border-gray-500 w-[60px] bg-gray-100
+                        btnHover">
+                        <button @click="onLessonDeleteWindowOpenClick(l)" title="Удалить урок" class="cursor-pointer w-full h-full block">
+                            {{ new Date(l.lessonDate).getDate() }}.{{ new Date(l.lessonDate).getMonth() + 1}}
+                        </button>                       
+                    </th>
+                    <th v-else v-for="l in lessons" class="p-1 border border-gray-500 w-[60px] bg-gray-100">
+                        {{ new Date(l.lessonDate).getDate() }}.{{ new Date(l.lessonDate).getMonth() + 1}}                     
                     </th>
                     <th v-if="session.role === 'teacher'" class="border border-gray-500 p-1 w-[60px]">
                         <button class="h-full w-full block cursor-pointer rounded-sm"
@@ -63,139 +70,8 @@
             </tbody>
         </table>
     </div>
-    <div v-if="isProgressWindowOpen"
-        class="fixed inset-0 flex items-center justify-center bg-black/70">
-        <div class="bg-white w-[40%] rounded-md flex justify-center">         
-            <form @submit.prevent="submitForm" class="m-3">
-                <div class="text-xl mb-2">
-                    Форма редактирования оценки
-                </div>
-                <div>
-                    Ученик(ца): {{ selectedStudent.lastName }} {{ selectedStudent.firstName }} {{ selectedStudent.middleName }}<br/>
-                    Дата урока: {{ progressLesson.lessonDate }}
-                </div>
-                <div class="mt-2">
-                    <div>
-                        <span class="error" v-if="progressError !== ''">{{ progressError }}</span>
-                    </div>    
-                    <div>
-                        <p class="error" v-if="progressValidationErrors.ProgressUpdateDate !== ''">
-                            {{ progressValidationErrors.ProgressUpdateDate }}
-                        </p>
-                    </div>
-                    <div>
-                        <label class="mr-1">Оценка:</label>
-                    </div>
-                    <div>
-                        <select class="text-box" v-model="progress.markId">
-                            <option :value="null">Выберите оценку</option>
-                            <option :value="null">Без оценки</option>
-                            <option v-for="m in allMarks"
-                                :key="m"
-                                :value="m.id">
-                                {{ m.value }}
-                            </option>
-                        </select>
-                    </div>
-                </div>
-                <div class="mt-2">
-                    <div>
-                        <label class="mr-1">Посещаемость:</label>
-                    </div>
-                    <div>
-                        <span class="error" v-if="progressValidationErrors.AttendanceId !== ''">{{ progressValidationErrors.AttendanceId }}</span>
-                    </div>
-                    <div>
-                        <select class="text-box" v-model="progress.attendanceId">
-                            <option :value=null>Выберите посещаемость</option>
-                            <option v-for="a in allAttendances"
-                                :key="a"
-                                :value="a.id">
-                                {{ a.value }}
-                            </option>
-                        </select>
-                    </div>
-                </div>
-                <div class="mt-2">
-                    <button v-if="isProgressAddingForm" class="btn-primary mr-2 cursor-pointer"
-                        @click="onProgressAddFormSubmitClick" type="button">
-                        Сохранить изменения
-                    </button>
-                    <button v-if="isProgressEditForm" class="btn-primary mr-2 cursor-pointer"
-                        @click="onProgressUpdateFormSubmitClick" type="button">
-                        Сохранить изменения
-                    </button>
-                    <button @click="closeProgressWindow" class="btn-gray p-1 cursor-pointer"
-                        type="button">
-                        Отмена
-                    </button>
-                </div>
-                <div v-if="isProgressEditForm" class="mt-2">
-                    <div class="text-xl mb-2">
-                        История изменения
-                    </div>
-                    <div v-if="progress.progressChangeHistory.length > 0">
-                        <ul>
-                            <li v-for="p in progress.progressChangeHistory">
-                                Оценка: {{ p.markValue }},
-                                Посещаемость: {{ p.attendanceValue }},
-                                Время:
-                                {{ new Date(p.progressUpdateTime).toLocaleDateString(
-                                    'ru-RU', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                 })}}
-                            </li>
-                        </ul>
-                    </div> 
-                    <div v-else>
-                        Нет истории изменений успеваемости за данный урок.
-                    </div>
-                </div>
-            </form>           
-        </div>
-    </div>
-    <div v-if="isLessonWindowOpen" class="fixed inset-0 flex items-start justify-center bg-black/70 pt-50">
-        <div class="bg-white w-[30%] rounded-md flex justify-center"> 
-            <form @submit.prevent="submitForm" class="m-3">
-                <div>
-                    <label>
-                        Выберите дату урока
-                    </label>
-                </div>
-                <div>
-                    <span class="error" v-if="lessonError !== ''">
-                        {{ lessonError }}
-                    </span>
-                </div>
-                <div>
-                    <VueDatePicker 
-                        :time-config="{enableTimePicker: false}"
-                        :locale="ru"
-                        :action-row="{
-                            selectBtnLabel: 'Выбрать',
-                            cancelBtnLabel: 'Отмена'
-                        }"
-                        :formats="{input: 'dd.MM.yyyy', preview: 'dd.MM.yyyy'}"
-                        v-model="newLessonDate"
-                    />
-                </div>
-                <div class="mt-2">
-                    <button class="cursor-pointer btn-primary me-2" @click="onLessonAddSubmitClick"
-                        type="button">
-                        Добавить урок
-                    </button>
-                    <button class="cursor-pointer btn-gray p-1" @click="closeLessonWindow"
-                        type="button">
-                        Отмена
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+    
+    
     <div class="ms-3 mt-2">
         <span>Выберите месяц:</span>
         <select v-model="selectedMonth" @change="onMonthSelectChange" class="text-box ms-2">
@@ -205,6 +81,7 @@
             </option>
         </select>
     </div>
+
     <div class="mt-3 mb-3">
         <div class="grid grid-cols-10 border-b border-b-gray-300 
             ps-3 pe-3 gap-3" v-for="l in lessons">
@@ -218,7 +95,7 @@
                 <p class="wrap-break-word">Д/З: {{ l.homework }}</p>
             </div>
             <div class="col-span-1" v-if="session.role === 'teacher'">
-                <button class="btn-gray p-0.5 m-1" @click="openLessonDetailsWindow(l)">
+                <button class="btn-gray p-0.5 m-1 cursor-pointer" @click="openLessonDetailsWindow(l)">
                     Редактировать
                 </button>
             </div>
@@ -227,34 +104,7 @@
             </div>  
         </div>
     </div>
-    <div v-if="isLessonDetailsWindowOpen" class="fixed inset-0 flex items-center justify-center bg-black/70">
-        <div class="bg-white w-[50%] rounded-md flex justify-center">
-            <form @submit.prevent="submitForm" class="m-3 w-[80%]">
-                <span>Форма редактирования описания урока</span>
-                <div class="mt-3">
-                    <label>Тема урока:</label>
-                </div>
-                <div class="flex">
-                    <input class="text-box w-2xl" v-model="newLessonTheme"/>
-                </div>
-                <div class="mt-3">
-                    <label>Домашнее задание:</label>
-                </div>
-                <div class="flex">
-                    <textarea class="text-box w-2xl h-40" v-model="newLessonHomework"></textarea>
-                </div>
-                <div class="mt-3">
-                    <button type="button" class="btn-primary me-2"
-                        @click="onLessonDetailsSubmitClick">
-                        Сохранить изменения
-                    </button>
-                    <button type="button" @click="closeLessonDetailsWindow" class="btn-gray p-1">
-                        Отмена
-                    </button>
-                </div>               
-            </form>
-        </div>
-    </div>
+    
     <Transition
         enter-active-class="transition duration-200 ease-out"
         enter-from-class="opacity-0"
@@ -263,22 +113,247 @@
         leave-from-class="opacity-100"
         leave-to-class="opacity-0"
     >
-    <div v-if="isChartWindowOpen" class="fixed inset-0 flex items-center justify-center bg-black/70">
-        <div class="bg-white w-[70%] rounded-sm justify-center p-3">
-            <div>
-                <p>Статистика успеваемости ученика(цы): {{ selectedStudent.lastName }} {{ selectedStudent.firstName }} {{ selectedStudent.middleName }}</p>
+        <div v-if="isChartWindowOpen" class="fixed inset-0 flex items-center justify-center bg-black/70">
+            <div class="bg-white w-[70%] rounded-sm justify-center p-3">
+                <div>
+                    <p>Статистика успеваемости ученика(цы): {{ selectedStudent.lastName }} {{ selectedStudent.firstName }} {{ selectedStudent.middleName }}</p>
+                </div>
+                <div class="m-3" v-if="chartData.datasets && chartData.labels">
+                    <MyChart :chartData="chartData" :options="chartOptions" />
+                </div>
+                <div>
+                    <button class="btn-gray" @click="onStatisticWindowCloseClick">
+                        Закрыть
+                    </button>
+                </div>
             </div>
-            <div class="m-3" v-if="chartData.datasets && chartData.labels">
-                <MyChart :chartData="chartData" :options="chartOptions" />
-            </div>
-            <div>
-                <button class="btn-gray" @click="onStatisticWindowCloseClick">
-                    Закрыть
-                </button>
+        </div> 
+    </Transition>   
+
+    <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+    >
+        <div v-if="isLessonDeleteWindowOpen" class="fixed inset-0 flex items-center justify-center bg-black/70">
+            <div class="bg-white w-[30%] rounded-sm p-3">
+                <div class="justify-center flex">
+                    <span>Вы точно хотите удалить этот урок?</span>                  
+                </div>
+                <div class="justify-center flex mb-2" v-if="lessonError">
+                    <span class="error text-center">{{lessonError}}</span>
+                </div>
+                <div class="justify-center flex">
+                    <button @click="onLessonDeleteSubmitClick" 
+                        class="cursor-pointer btn-primary ps-3 pe-3 me-2">Да</button>
+                    <button @click="onLessonDeleteWindowCloseClick()" 
+                        class="cursor-pointer btn-gray ps-3 pe-3 p-1">Нет</button>
+                </div>
             </div>
         </div>
-    </div> 
-</Transition>   
+    </Transition>
+
+    <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+    >
+        <div v-if="isLessonDetailsWindowOpen" class="fixed inset-0 flex items-center justify-center bg-black/70">
+            <div class="bg-white w-[50%] rounded-md flex justify-center">
+                <form @submit.prevent="submitForm" class="m-3 w-[80%]">
+                    <span>Форма редактирования описания урока</span>
+                    <div v-if="lessonError">
+                        <span class="error">
+                            {{ lessonError }}
+                        </span>
+                    </div>
+                    <div class="mt-3">
+                        <label>Тема урока:</label>
+                    </div>
+                    <div class="flex">
+                        <input class="text-box w-2xl" v-model="newLessonTheme"/>
+                    </div>
+                    <div class="mt-3">
+                        <label>Домашнее задание:</label>
+                    </div>
+                    <div class="flex">
+                        <textarea class="text-box w-2xl h-40" v-model="newLessonHomework"></textarea>
+                    </div>
+                    <div class="mt-3">
+                        <button type="button" class="btn-primary me-2"
+                            @click="onLessonDetailsUpdateClick">
+                            Сохранить изменения
+                        </button>
+                        <button type="button" @click="closeLessonDetailsWindow" class="btn-gray p-1">
+                            Отмена
+                        </button>
+                    </div>               
+                </form>
+            </div>
+        </div>
+    </Transition>
+
+    <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+    >
+        <div v-if="isLessonWindowOpen" class="fixed inset-0 flex items-start justify-center bg-black/70 pt-50">
+            <div class="bg-white w-[30%] rounded-md flex justify-center"> 
+                <form @submit.prevent="submitForm" class="m-3">
+                    <div>
+                        <label>
+                            Выберите дату урока
+                        </label>
+                    </div>
+                    <div>
+                        <span class="error max-w-full wrap-break-word" v-if="lessonError !== ''">
+                            {{ lessonError }}
+                        </span>
+                    </div>
+                    <div>
+                        <VueDatePicker 
+                            :time-config="{enableTimePicker: false}"
+                            :locale="ru"
+                            :action-row="{
+                                selectBtnLabel: 'Выбрать',
+                                cancelBtnLabel: 'Отмена'
+                            }"
+                            :formats="{input: 'dd.MM.yyyy', preview: 'dd.MM.yyyy'}"
+                            v-model="newLessonDate"
+                        />
+                    </div>
+                    <div class="mt-2">
+                        <button class="cursor-pointer btn-primary me-2" @click="onLessonAddSubmitClick"
+                            type="button">
+                            Добавить урок
+                        </button>
+                        <button class="cursor-pointer btn-gray p-1" @click="closeLessonWindow"
+                            type="button">
+                            Отмена
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </Transition>
+
+    <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+    >
+        <div v-if="isProgressWindowOpen" class="fixed inset-0 flex items-center justify-center bg-black/70">
+            <div class="bg-white w-[40%] rounded-md flex justify-center">         
+                <form @submit.prevent="submitForm" class="m-3">
+                    <div class="text-xl mb-2">
+                        Форма редактирования оценки
+                    </div>
+                    <div>
+                        Ученик(ца): {{ selectedStudent.lastName }} {{ selectedStudent.firstName }} {{ selectedStudent.middleName }}<br/>
+                        Дата урока: {{ progressLesson.lessonDate }}
+                    </div>
+                    <div class="mt-2">
+                        <div>
+                            <span class="error" v-if="progressError !== ''">
+                                {{ progressError }}
+                            </span>
+                        </div>    
+                        <div>
+                            <p class="error" v-if="progressValidationErrors.ProgressUpdateDate !== ''">
+                                {{ progressValidationErrors.ProgressUpdateDate }}
+                            </p>
+                        </div>
+                        <div>
+                            <label class="mr-1">Оценка:</label>
+                        </div>
+                        <div>
+                            <select class="text-box" v-model="progress.markId">
+                                <option :value="null">Без оценки</option>
+                                <option v-for="m in allMarks"
+                                    :key="m"
+                                    :value="m.id">
+                                    {{ m.value }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <div>
+                            <label class="mr-1">Посещаемость:</label>
+                        </div>
+                        <div>
+                            <span class="error" v-if="progressValidationErrors.AttendanceId !== ''">
+                                {{ progressValidationErrors.AttendanceId }}
+                            </span>
+                        </div>
+                        <div>
+                            <select class="text-box" v-model="progress.attendanceId">
+                                <option :value=null>Выберите посещаемость</option>
+                                <option v-for="a in allAttendances"
+                                    :key="a"
+                                    :value="a.id">
+                                    {{ a.value }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <button v-if="isProgressAddingForm" class="btn-primary mr-2 cursor-pointer"
+                            @click="onProgressAddFormSubmitClick" type="button">
+                            Сохранить изменения
+                        </button>
+                        <button v-if="isProgressEditForm" class="btn-primary mr-2 cursor-pointer"
+                            @click="onProgressUpdateFormSubmitClick" type="button">
+                            Сохранить изменения
+                        </button>
+                        <button @click="closeProgressWindow" class="btn-gray p-1 cursor-pointer"
+                            type="button">
+                            Отмена
+                        </button>
+                    </div>
+                    <div v-if="isProgressEditForm" class="mt-2">
+                        <div class="text-xl mb-2">
+                            История изменения успеваемости
+                        </div>
+                        <div v-if="progress.progressChangeHistory.length > 0">
+                            <ul>
+                                <li v-for="p in progress.progressChangeHistory">
+                                    Оценка: {{ p.markValue }},
+                                    Посещаемость: {{ p.attendanceValue }},
+                                    Изменино:
+                                    {{ new Date(p.progressUpdateTime).toLocaleDateString(
+                                        'ru-RU', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}}
+                                </li>
+                            </ul>
+                        </div> 
+                        <div v-else>
+                            Нет истории изменений успеваемости за данный урок.
+                        </div>
+                    </div>
+                </form>           
+            </div>
+        </div>
+    </Transition>
+    
 </template>
 <script setup>
     import { computed, inject, onMounted, ref } from 'vue';
@@ -315,6 +390,7 @@
     const isProgressEditForm = ref(false)
     const isProgressAddingForm = ref(false)
     const isChartWindowOpen = ref(false)
+    const isLessonDeleteWindowOpen = ref(false)
 
     const lessonError = ref('')
     const progressValidationErrors = ref({AttendanceId: '', MarkId: '', LessonId: '', UserId: '', ProgressUpdateDate: ''})
@@ -364,7 +440,16 @@
     })
 
     const chartOptions = {
-        responsive: true
+        responsive: true,
+        scales: {
+            y: {
+                min: 1,
+                max: 5,
+                ticks: {
+                    stepSize: 1
+                }
+            },
+        }
     }
 
     onMounted (async () =>{
@@ -380,7 +465,7 @@
             await setDropdownListsArrays()
         }
         catch(error){
-            console.log(error)
+            console.log(error.response)
         }       
     })
 
@@ -392,7 +477,7 @@
             allAttendances.value = attendanceResponse.data  
         }
         catch(error){
-            console.log(error)
+            console.log(error.response)
         }       
     }
     const onProgressAddFormSubmitClick = async () =>{
@@ -442,7 +527,7 @@
         }
         catch(error){
             progressError.value = 'Ошибка при загркзке данных!'
-            console.log(error)
+            console.log(error.response)
         }
     }
     const onLessonAddSubmitClick = async () =>{
@@ -462,16 +547,13 @@
                 if(responseData.ErrorCode === 'ENTITY_ADDING_ERROR')
                     lessonError.value = 'Ошибка при добаввлении урока! Повторите попытку позже.'
                 if(responseData.ErrorCode === 'ENTITY_LOGIC_CONFLICT_ERROR')
-                    if(responseData.Message === `Lessons can't be on weekends`){
+                    if(responseData.Message === `Lessons can't be teached on weekends!`){
                         lessonError.value = 'Урок нельзя поставить в выходной.'
                     }
                     else{
                         lessonError.value = `Дата урока выходит за пределы учебного года журнала 
                         ${journalYear.value.toString().slice(-2)}/${(journalYear.value + 1).toString().slice(-2)}`
                     }   
-            }
-            else if(responseData.StatusCode === 404){
-                lessonError.value = 'Ошибка при привязке урока к журналу. Повторите попытку позже.'
             }
             else if(responseData.status === 400){
                 lessonError.value = 'Дата урока обязательна для заполнения! '
@@ -509,7 +591,7 @@
             isProgressWindowOpen.value = true
         }
         catch(error){
-            console.log(error)
+            console.log(error.response)
         }
     }
     function openLessonWindow(){
@@ -556,11 +638,17 @@
     }
     function handleProgressChangingExceptions(responseData){
         if(responseData.StatusCode === 409){
-            if(responseData.ErrorCode === 'ENTITY_LOGIC_CONFLICT_ERROR'){
-                progressError.value = 'Ученик не может получить оценку за занятие, которое он не посещал. Измените посещаемость ученика.'
+            if(responseData.Message === `Student can't be absent and recieve a mark!`){
+                progressError.value = 'Ученик не может отсутствовать на уроке и получить оценку!'
             }
-            if(responseData.ErrorCode === 'ENTITY_ADDING_ERROR'){
-                progressError.value = 'Ошибка при сохранении изменений!'
+            else if(responseData.Message === `Can't edit progress before a lesson has been taught.`){
+                progressError.value = 'Успеваемость нельзя изменять до проведения урока!'
+            }
+            else if(responseData.Message === `Can't edit progress after 30 days since lesson has been taught.`){
+                progressError.value = 'Успеваемость можно редактировать только в течении 30 дней после проведения занятия!'
+            }
+            else{
+                console.log(responseData)
             }
         }
         else if(responseData.status === 400){
@@ -575,7 +663,7 @@
             console.log(responseData)
         }
     }
-    const onLessonDetailsSubmitClick = async() =>{
+    const onLessonDetailsUpdateClick = async() =>{
         try{
             await api.updateLessonDetails(selectedLesson.value.id, newLessonTheme.value, newLessonHomework.value)
             selectedLesson.value.homework = newLessonHomework.value
@@ -583,7 +671,16 @@
             closeLessonDetailsWindow()
         }
         catch(error){
-            console.log(error.response)
+            const response = error.response
+            if(response.data.StatusCode === 409){
+                if(response.data.ErrorCode === `ENTITY_LOGIC_CONFLICT_ERROR`){
+                    lessonError.value = 'Нельзя редактировать тему и Д/З урока после кго проведения.'
+                }
+                else{
+                    console.log(response)
+                }
+            }
+            console.log(response)
         }       
     }
     const openStatisticWindow = async(studentId) =>{
@@ -598,13 +695,15 @@
                         label: 'Средняя оценка',
                         data: responseData.avgMarks,
                         borderColor: 'blue',
-                        tension: 0.3
+                        tension: 0.3,
+                        clip: 50
                     },
                     {
                         label: 'Фактичесая оценка',
                         data: responseData.factMarks,
                         borderColor: 'lightgray',
-                        tension: 0.3
+                        tension: 0.3,
+                        clip: 50
                     }
                 ]
             }
@@ -622,4 +721,41 @@
         selectedStudent.value = null
         isChartWindowOpen.value = false
     }
+    function onLessonDeleteWindowCloseClick(){
+        clearMessages()
+        isLessonDeleteWindowOpen.value = false
+        selectedLesson.value = null
+    }
+    function onLessonDeleteWindowOpenClick(lesson){
+        isLessonDeleteWindowOpen.value = true
+        selectedLesson.value = lesson
+    }
+    const onLessonDeleteSubmitClick = async() =>{
+        try{
+            await api.deleteLesson(selectedLesson.value.id)
+            const response = await api.getLessonsForJournal(journalId, selectedMonth.value, journalYear.value)
+            lessons.value = response.data
+            onLessonDeleteWindowCloseClick()
+        }
+        catch(error){
+            const errorData = error.response.data
+            if(errorData.StatusCode === 409){
+                if(errorData.Message === 'Cannot delete lesson after it is being teached'){
+                    lessonError.value = "Невозможно удалить урок после того, как он был проведён."
+                }
+                else if(errorData.Message === 'An error has occured while deleting Lesson entity from DB.'){
+                    lessonError.value = "К уроку уже привязана успеваемость и его нельзя удалить!"
+                }
+                else{
+                    console.log(errorData)
+                }
+            }
+            else{
+                console.log(errorData)
+            }
+        }
+    }
 </script>
+<style>
+    .btnHover:hover{ background: #dc2100; color: #f9f9f9}
+</style>

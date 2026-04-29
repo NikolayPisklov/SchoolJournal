@@ -119,5 +119,11 @@ namespace SchoolJournalApi.Controllers
             var result = await _progressService.GetStudentStatisticAsync(studentId, journalId);
             return Ok(result);
         }
+        [HttpDelete("delete-lesson")]
+        public async Task<IActionResult> DeleteLesson(int lessonId)
+        {
+            await _lessonService.DeleteLessonAsync(lessonId);
+            return Ok();
+        }
     }
 }

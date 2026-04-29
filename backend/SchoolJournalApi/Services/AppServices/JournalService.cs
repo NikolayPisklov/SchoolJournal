@@ -9,7 +9,6 @@ using SchoolJournalApi.Exceptions;
 using SchoolJournalApi.Models;
 using SchoolJournalApi.Services.AppServices.Interfaces;
 using SchoolJournalApi.Services.DbServices.Interfaces;
-using System.Data.Common;
 
 namespace SchoolJournalApi.Services.AppServices
 {
@@ -17,12 +16,19 @@ namespace SchoolJournalApi.Services.AppServices
     {
         private readonly IJournalDbService _journalDbService;
         private readonly IContextService _contextService;
+        private readonly ILessonDbService _lessonDbService;
+        private readonly IProgressDbService _progressDbService;
+        private readonly IStudentClassDbService _studentClassDbService;
 
-
-        public JournalService(IJournalDbService journalDbService, IContextService contextService)
+        public JournalService(IJournalDbService journalDbService, IContextService contextService, 
+            ILessonDbService lessonDbService, IProgressDbService progressDbService, 
+            IStudentClassDbService studentClassDbService)
         {
             _journalDbService = journalDbService;
             _contextService = contextService;
+            _lessonDbService = lessonDbService;
+            _progressDbService = progressDbService;
+            _studentClassDbService = studentClassDbService;
         }
 
 
@@ -30,14 +36,15 @@ namespace SchoolJournalApi.Services.AppServices
         {
             try
             {
-                if (!await _journalDbService.IsThereSameJournal(dto.ClassId, dto.TeacherSubjectId, dto.JournalYear))
+                int schoolYear = SchoolYearService.GetCurrentSchoolYear();
+                if (await _journalDbService.IsThereSameJournal(dto.ClassId, dto.TeacherSubjectId, schoolYear))
                 {
                     throw new EntityAlreadyExistsException("Entity Journal with this parameters for this year already exists!");
                 }
                 var newJournal = new Journal();
                 newJournal.ClassId = dto.ClassId;
                 newJournal.TeacherSubjectId = dto.TeacherSubjectId;
-                newJournal.Year = DateTime.Now.Year;
+                newJournal.Year = schoolYear;
                 _journalDbService.AddJournal(newJournal);
                 await _contextService.SaveChangesAsync();
             }
@@ -80,9 +87,9 @@ namespace SchoolJournalApi.Services.AppServices
                 {
                     throw new EntityNotFoundException($"Journal entity with Id: {journalId} is not found!");
                 }
-                var studentsQuery = _journalDbService.GetStudentsForJournal(journalId);
-                var lessonsQuery = _journalDbService.GetLessonsForJournal(journalId, journal.Year);
-                var progressesQuery = _journalDbService.GetProgressesForJournal(journalId);
+                var studentsQuery = _studentClassDbService.GetStudentsForJournal(journal.ClassId);
+                var lessonsQuery = _lessonDbService.GetLessonsForJournal(journalId, 9, journal.Year);
+                var progressesQuery = _progressDbService.GetProgressesForJournal(journal.Id);
                 return new JournalDetailsDto
                 {
                     Students = await SelectUsersAsync(studentsQuery),
@@ -96,9 +103,28 @@ namespace SchoolJournalApi.Services.AppServices
                 throw new EfDbException("An error has occurred while reading data from DB!", ex);
             }
         }
-        public Task<JournalDetailsDto> GetJournalDetailsForStudentAsync(int journalId)
+        public async Task<JournalDetailsDto> GetJournalDetailsForStudentAsync(int journalId, int studentId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var journal = await _journalDbService.FindJournalAsync(journalId);
+                if (journal is null)
+                {
+                    throw new EntityNotFoundException($"Journal entity with Id: {journalId} is not found!");
+                }
+                var lessonsQuery = _lessonDbService.GetAllLessonsForJournal(journalId);
+                var progressesQuery = _progressDbService.GetProgressesForStudentJournal(journalId, studentId);
+                return new JournalDetailsDto
+                {
+                    Lessons = await SelectLessonsAsync(lessonsQuery),
+                    Progresses = await SelectProgressesAsync(progressesQuery),
+                    JournalYear = journal.Year
+                };
+            }
+            catch(SqlException ex)
+            {
+                throw new EfDbException("An error has occurred while reading data from DB!", ex);
+            }
         }
         public async Task<List<JournalInListDto>> GetJournalsForClassAsync(int classId)
         {
@@ -128,7 +154,7 @@ namespace SchoolJournalApi.Services.AppServices
         {
             try
             {
-                var studentClass = await _journalDbService.FindStudentClassAsync(studentId);
+                var studentClass = await _studentClassDbService.FindStudentClassAsync(studentId);
                 if (studentClass is null)
                 {
                     throw new EntityNotFoundException($"Class for student with Id: {studentId} is not found!");

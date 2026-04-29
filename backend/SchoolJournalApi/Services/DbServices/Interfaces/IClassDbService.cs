@@ -8,5 +8,7 @@ namespace SchoolJournalApi.Services.DbServices.Interfaces
         Task<Class?> FindClassAsync(int classId);
         void DeleteClass(Class classEntity);
         IQueryable<Class> GetClasses();
+        Task<bool> IsThereStudentsInClass(int classId);
+        Task<bool> IsThereJournalsForClass(int classId, int year);
     }
 }

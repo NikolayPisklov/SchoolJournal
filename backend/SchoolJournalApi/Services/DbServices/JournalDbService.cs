@@ -3,6 +3,7 @@ using SchoolJournalApi.Models;
 using SchoolJournalApi.Exceptions;
 using SchoolJournalApi.Services.DbServices.Interfaces;
 using System.Data.Common;
+using SchoolJournalApi.Services.AppServices;
 
 namespace SchoolJournalApi.Services.DbServices
 {
@@ -52,52 +53,20 @@ namespace SchoolJournalApi.Services.DbServices
                 throw new EntityAddingException("An error has occurred while reading data from DB!", ex);
             }
         }
-        public async Task<StudentClass?> FindStudentClassAsync(int studentId) 
-        {
-            try
-            {
-                var studentClass = await _db.StudentClasses.FirstOrDefaultAsync(sc => sc.IsActive 
-                    && sc.UserId == studentId);
-                return studentClass;
-            }
-            catch (DbException ex)
-            {
-                throw new EntityAddingException("An error has occurred while reading data from DB!", ex);
-            }
-        }
         public void DeleteJournal(Journal journal)
         {
              _db.Remove(journal);
         }
-        public IQueryable<StudentClass> GetStudentsForJournal(int journalId) 
-        {
-            return _db.StudentClasses.AsNoTracking()
-                .Where(sc => sc.ClassId == journalId);            
-        }
-        public IQueryable<Lesson> GetLessonsForJournal(int journalId, int journalYear) 
-        {
-            var start = new DateOnly(journalYear, 9, 1);
-            var end = start.AddMonths(1);
-            return _db.Lessons.AsNoTracking()
-                .Where(l => l.JournalId == journalId && l.LessonDate >= start
-                    && l.LessonDate < end && l.IsDeleted == false)
-                .OrderBy(l => l.LessonDate);
-        }
-        public IQueryable<Progress> GetProgressesForJournal(int journalId) 
-        {
-            return _db.Progresses.AsNoTracking()
-            .Where(prog => prog.Lesson.JournalId == journalId
-                && prog.IsUpdated == false);
-        }
         public IQueryable<Journal> GetJournalsForClass(int classId) 
         {
             return _db.Journals.AsNoTracking()
-                .Where(j => j.ClassId == classId);
+                .Where(j => j.ClassId == classId && j.Year == SchoolYearService.GetCurrentSchoolYear());
         }
         public IQueryable<Journal> GetJournalsForTeacher(int teacherId) 
         {
             return _db.Journals.AsNoTracking()
-                .Where(j => j.TeacherSubject.Teacher.Id == teacherId);
+                .Where(j => j.TeacherSubject.Teacher.Id == teacherId
+                && j.Year == SchoolYearService.GetCurrentSchoolYear());
         }
        
     }
