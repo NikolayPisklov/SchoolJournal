@@ -1,8 +1,7 @@
-﻿using SchoolJournalApi.Exceptions;
-using System.Net;
+﻿using System.Net;
 using System.Text.Json;
 
-namespace SchoolJournalApi.Middleware
+namespace SchoolJournalAuthApi.Middleware
 {
     public class ErrorHandlingMiddleware
     {
@@ -34,36 +33,6 @@ namespace SchoolJournalApi.Middleware
             string errorCode = string.Empty;
             switch (ex) 
             {
-                case EntityInUseException:
-                    code = HttpStatusCode.Conflict;
-                    errorMessage = ex.Message;
-                    errorCode = "ENTITY_IN_USE_ERROR";
-                    break;
-                case EntityNotFoundException:
-                    code = HttpStatusCode.NotFound;
-                    errorMessage = ex.Message;
-                    errorCode = "ENTITY_NOT_FOUND_ERROR";
-                    break;
-                case EntityAddingException:
-                    code = HttpStatusCode.Conflict;
-                    errorCode = "ENTITY_ADDING_ERROR";
-                    errorMessage = ex.Message;
-                    break;
-                case InvalidOperationException:
-                    code = HttpStatusCode.Conflict;
-                    errorCode = "INVALID_OPERATION_ERROR";
-                    errorMessage = ex.Message;
-                    break;
-                case EntityAlreadyExistsException:
-                    code = HttpStatusCode.Conflict;
-                    errorCode = "ENTITY_ALREADY_EXISTS_ERROR";
-                    errorMessage = ex.Message;
-                    break;
-                case BusinessLogicException:
-                    code = HttpStatusCode.Conflict;
-                    errorCode = "ENTITY_LOGIC_CONFLICT_ERROR";
-                    errorMessage = ex.Message;
-                    break;
                 default:
                     _logger.LogError(ex, "Unknown exception has occured");
                     errorMessage = "An exception has occured";

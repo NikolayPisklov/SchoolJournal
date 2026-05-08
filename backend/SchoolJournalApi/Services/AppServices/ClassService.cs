@@ -27,7 +27,7 @@ namespace SchoolJournalApi.Services.AppServices
         {
             try
             {
-                int number = DateTime.Now.Year - (int)classDto.Year!;
+                int number = SchoolYearService.GetCurrentSchoolYear() - (int)classDto.Year!;
                 int eduLevel = GetEducationalLevel(number);
                 Class newClass = new Class
                 {
@@ -56,12 +56,7 @@ namespace SchoolJournalApi.Services.AppServices
                 {
                     throw new EntityNotFoundException("Entity Class can't be found!");
                 }
-                int number = DateTime.Now.Year - (int)classDto.Year!;
-                int eduLevel = GetEducationalLevel(number);
-
                 classEntity.Title = classDto.Title;
-                classEntity.Year = (int)classDto.Year!;
-                classEntity.EducationalLevelId = eduLevel;
                 await _contextService.SaveChangesAsync();
             }
             catch (ReferenceConstraintException ex)
@@ -128,7 +123,8 @@ namespace SchoolJournalApi.Services.AppServices
                 var classes = _classDbService.GetClasses();
                 classes = FilterClasses(classes, educationalLevelId);
                 int numberOfPages = await CalculateNumberOfPagesAsync(classes, pageSize);
-                List<ClassDto> classesDto = await classes.OrderBy(c => c.Year).Skip((page - 1) * pageSize).Take(pageSize)
+                List<ClassDto> classesDto = await classes.Where(c => SchoolYearService.GetCurrentSchoolYear() - c.Year <= 11)
+                    .OrderBy(c => c.Year).ThenBy(c => c.Title).Skip((page - 1) * pageSize).Take(pageSize)
                     .Select(c => new ClassDto
                     {
                         Id = c.Id,
@@ -148,7 +144,8 @@ namespace SchoolJournalApi.Services.AppServices
             try
             {
                 var classes = _classDbService.GetClasses();
-                return await classes.OrderByDescending(c => c.Year)
+                return await classes.Where(c => SchoolYearService.GetCurrentSchoolYear() - c.Year <= 11)
+                    .OrderByDescending(c => c.Year)
                     .ThenBy(c => c.Title).Select(c => new ClassDto
                     {
                         Id = c.Id,

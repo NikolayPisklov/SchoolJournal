@@ -15,12 +15,14 @@ namespace SchoolJournalApi.Services.AppServices
     {
         private readonly IUsersDbService _dbService;
         private readonly IContextService _contextService;
+        private readonly IStudentClassDbService _studentClassDbService;
 
 
-        public UserService (IUsersDbService usersDbService, IContextService contextService)
+        public UserService (IUsersDbService usersDbService, IContextService contextService, IStudentClassDbService studentClassDbService)
         {
             _contextService = contextService;
             _dbService = usersDbService;
+            _studentClassDbService = studentClassDbService;
         }
 
 
@@ -184,7 +186,7 @@ namespace SchoolJournalApi.Services.AppServices
         {
             try
             {
-                var studentClass = await _dbService.FindClassOfStudentAsync(userId);
+                var studentClass = await _studentClassDbService.FindStudentClassAsync(userId);
                 if (studentClass is null)
                 {
                     throw new EntityNotFoundException($"Student-Class for student with Id: {userId} is not found!");

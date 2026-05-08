@@ -28,13 +28,6 @@ namespace SchoolJournalApi.Services.DbServices
         {
             _db.Users.Remove(user);
         }
-
-        public async Task<StudentClass?> FindClassOfStudentAsync(int userId)
-        {
-            var studentClass = await _db.StudentClasses.Include(s => s.Class)
-                .FirstOrDefaultAsync(c => c.UserId == userId && c.IsActive);
-            return studentClass;
-        }
         public async Task<User?> FindUserAsync(int userId) 
         {
             try
