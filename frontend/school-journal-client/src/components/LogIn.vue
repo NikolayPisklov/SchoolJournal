@@ -47,15 +47,7 @@
             }                     
         }
         catch(error){
-            if(error.response){
-                console.log(error.response.data);
-                errorMessage.value = error.response.data;
-            }
-            else{
-                console.error('Неизвестная ошибка:', error)
-                console.error('Текст ошибки:', error.message)
-                console.error('Стек вызовов:', error.stack)
-            }
+            console.log(error)
         }                
     }
     const redirectUserBasedOnRole = (sessionData) => {

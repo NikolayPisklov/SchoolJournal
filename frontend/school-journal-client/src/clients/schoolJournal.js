@@ -393,4 +393,15 @@ export async function getJournalDetailsForStudent(journalId, studentId){
     throw error
   }
 }
+export async function getProgressHistoryForStudent(studentId, lessonId){
+  try{
+    const response = await schoolJournalClient.get('Student/get-progress-history-for-student',
+      {params: {studentId: studentId, lessonId: lessonId}}
+    )
+    return response
+  }
+  catch(error){
+    throw error
+  }
+}
 

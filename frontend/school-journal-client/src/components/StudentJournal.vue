@@ -23,13 +23,16 @@
                 <tr v-for="l in lessons">
                     <td class="border p-1">
                         <div class="flex justify-center">
-                            {{ new Date(l.lessonDate).toLocaleDateString(
-                                    'ru-RU', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    year: 'numeric', }
-                                )
-                            }}
+                            <button class="cursor-pointer text-blue-700 underline" title="Просмотр истории успеваемости"
+                                @click="onHistoryWindowOpenClick(l.id)">
+                                {{ new Date(l.lessonDate).toLocaleDateString(
+                                        'ru-RU', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric', }
+                                    )
+                                }}
+                            </button>
                         </div>                        
                     </td>
                     <td class="border">
@@ -101,6 +104,55 @@
             </div>
         </div> 
     </Transition>
+    <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+    >
+    <div v-if="progressHistory" class="fixed inset-0 flex items-center justify-center bg-black/70">
+            <div class="bg-white w-[50%] rounded-sm justify-center p-3">
+                <div class="flex justify-center text-xl">
+                    <p>История успеваемости по предмету "{{ journalTitleData.subjectTitle }}" 
+                        за урок от {{ new Date(selectedLesson.lessonDate).toLocaleDateString(
+                                        'ru-RU', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric', }
+                                    ) }}</p>
+                </div>
+                <div class="m-3" v-if="progressHistory.length > 0">
+                    <ul>
+                        <li v-for="p in progressHistory">
+                            Оценка: {{ p.markValue }},
+                            Посещаемость: {{ p.attendanceValue }},
+                            Дата изменения:
+                            {{ new Date(p.progressUpdateTime).toLocaleDateString(
+                                'ru-RU', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}}
+                        </li>
+                    </ul>
+                </div>
+                <div v-else>
+                    <p>
+                        Истории изменений успеваемости за этот урок пока нет.
+                    </p>
+                </div>
+                <div>
+                    <button class="btn-gray cursor-pointer" @click="onHistoryWindowCloseClick">
+                        Закрыть
+                    </button>
+                </div>
+            </div>
+        </div> 
+    </Transition>
 </template>
 <script setup>
     import { onMounted, inject, ref, computed } from 'vue';
@@ -117,6 +169,9 @@
 
     const lessons = ref([])
     const progresses = ref([])
+    
+    const selectedLesson = ref(null)
+    const progressHistory = ref(null)
 
     const progressMap = computed(() => {
         const map = {}
@@ -146,12 +201,32 @@
     const isStatisticWindowOpen = ref(false)
 
     onMounted(async()=>{
-        const titleResponse = await api.getJournalTitle(journalId)
-        journalTitleData.value = titleResponse.data
-        const detailsResponse = await api.getJournalDetailsForStudent(journalId, session.user.id)
-        lessons.value = detailsResponse.data.lessons
-        progresses.value = detailsResponse.data.progresses
+        try{
+            const titleResponse = await api.getJournalTitle(journalId)
+            journalTitleData.value = titleResponse.data
+            const detailsResponse = await api.getJournalDetailsForStudent(journalId, session.user.id)
+            lessons.value = detailsResponse.data.lessons
+            progresses.value = detailsResponse.data.progresses
+        }
+        catch(error){
+            console.log(error)
+        }
+
     })
+    function onHistoryWindowCloseClick(){
+        progressHistory.value = null
+        selectedLesson.value = null
+    }
+    const onHistoryWindowOpenClick = async(lessonId) =>{
+        try{
+            const response = await api.getProgressHistoryForStudent(session.user.id, lessonId)
+            selectedLesson.value = lessons.value.find(x => x.id === lessonId)
+            progressHistory.value = response.data
+        }
+        catch(error){
+            console.log(error)
+        }
+    }
     const onStatisticWindowOpenClick = async() =>{
         try{
             const response = await api.getStudentStatistic(session.user.id, journalId)

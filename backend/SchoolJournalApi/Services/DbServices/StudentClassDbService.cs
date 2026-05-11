@@ -36,7 +36,7 @@ namespace SchoolJournalApi.Services.DbServices
         {
             try
             {
-                return await _db.StudentClasses.FirstOrDefaultAsync(c => c.UserId == studentId && c.IsActive);
+                return await _db.StudentClasses.Include(sc => sc.Class).FirstOrDefaultAsync(c => c.UserId == studentId && c.IsActive);
             }
             catch (DbException ex) 
             {

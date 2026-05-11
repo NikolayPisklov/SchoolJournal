@@ -12,5 +12,6 @@ namespace SchoolJournalApi.Services.AppServices.Interfaces
         Task<List<JournalProgressDto>> GetProgressesForJournalAsync(int journalId);
         Task<ProgressDetailsDto> GetProgressDetailsAsync(int progressId);
         Task<StudentStaticticDto> GetStudentStatisticAsync(int studentId, int journalId);
+        Task<List<JournalProgressDto>> GetProgressHistoryForStudent(int studentId, int lessonId);
     }
 }

@@ -30,7 +30,7 @@ onMounted(async () =>{
         journals.value  =journalsResponse.data
     }
     catch(error){
-        console.log(error.data)
+        console.log(error)
     }
 })
 const onJournalSelectClick = async(journalId) =>{

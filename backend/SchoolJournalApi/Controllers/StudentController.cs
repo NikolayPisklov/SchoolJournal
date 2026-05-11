@@ -1,10 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using SchoolJournalApi.Enum_s;
 using SchoolJournalApi.Services.AppServices.Interfaces;
-using SchoolJournalApi.Services.DbServices.Interfaces;
 
 namespace SchoolJournalApi.Controllers
 {
@@ -14,8 +11,11 @@ namespace SchoolJournalApi.Controllers
     public class StudentController : ControllerBase
     {
         private readonly IJournalService _journalService;
-        public StudentController(IJournalService journalService) 
+        private readonly IProgressService _progressService;
+
+        public StudentController(IJournalService journalService, IProgressService progressService) 
         {
+            _progressService = progressService;
             _journalService = journalService;
         }
 
@@ -30,6 +30,12 @@ namespace SchoolJournalApi.Controllers
         {
             var details = await _journalService.GetJournalDetailsForStudentAsync(journalId, studentId);
             return Ok(details);
+        }
+        [HttpGet("get-progress-history-for-student")]
+        public async Task<IActionResult> GetProgressHistoryForStudent(int studentId, int lessonId)
+        {
+            var result = await _progressService.GetProgressHistoryForStudent(studentId, lessonId);
+            return Ok(result);
         }
     }
 }

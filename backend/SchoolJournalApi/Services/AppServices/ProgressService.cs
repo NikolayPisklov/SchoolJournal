@@ -190,7 +190,20 @@ namespace SchoolJournalApi.Services.AppServices
             _progressDbService.AddProgress(newProgress);
             await _contextService.SaveChangesAsync();
         }
-
+        public async Task<List<JournalProgressDto>> GetProgressHistoryForStudent(int studentId, int lessonId) 
+        {
+            var progressQuery = _progressDbService.GetLessonProgressHistoryForStudent(studentId, lessonId);
+            var result = await progressQuery.OrderByDescending(p => p.ProgressUpdateDate).Select(x => new JournalProgressDto
+            {
+                Id = x.Id,
+                UserId = x.UserId,
+                LessonId = x.LessonId,
+                MarkValue = x.Mark == null ? null : x.Mark.Value,
+                AttendanceValue = x.Attendance.Value,
+                ProgressUpdateTime = x.ProgressUpdateDate
+            }).ToListAsync();
+            return result;
+        }
 
         private StudentStaticticDto CreateStudentStatisticDto(List<double> factMarks, List<DateOnly> dates) 
         {

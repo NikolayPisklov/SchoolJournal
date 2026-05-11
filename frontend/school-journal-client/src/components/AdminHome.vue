@@ -6,11 +6,11 @@
         <div class="grid grid-cols-1 gap-2 mt-3">
             <div class="flex justify-center">
                 <router-link to="/adminUsers" style="cursor: pointer"
-                    class="mx-auto block items-center justify-center btn-gray">Редактирование пользователей</router-link>
+                    class="mx-auto block p-1 items-center justify-center btn-gray">Редактирование пользователей</router-link>
             </div>
             <div class="flex justify-center">
                 <router-link to="/adminClasses" style="cursor: pointer"
-                    class="mx-auto block items-center justify-center btn-gray">Редактирование классов и их журналов</router-link>
+                    class="mx-auto block p-1 items-center justify-center btn-gray">Редактирование классов и их журналов</router-link>
             </div>
         </div>
     </div>

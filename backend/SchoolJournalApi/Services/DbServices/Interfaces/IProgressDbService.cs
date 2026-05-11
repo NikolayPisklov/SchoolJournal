@@ -4,6 +4,7 @@ namespace SchoolJournalApi.Services.DbServices.Interfaces
 {
     public interface IProgressDbService
     {
+        IQueryable<Progress> GetLessonProgressHistoryForStudent(int studentId, int lessonId);
         IQueryable<Mark> GetMarks();
         IQueryable<Attendance> GetAttendances();
         IQueryable<Progress> GetProgressesForJournal(int journalId);

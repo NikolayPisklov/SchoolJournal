@@ -14,6 +14,10 @@ namespace SchoolJournalApi.Services.DbServices
         public ProgressDbService(SchoolJournalDbContext db): base(db) { }
 
 
+        public IQueryable<Progress> GetLessonProgressHistoryForStudent(int studentId, int lessonId)
+        {
+            return _db.Progresses.Where(p => p.LessonId == lessonId && p.UserId == studentId);
+        }
         public IQueryable<Mark> GetMarks() 
         {
             return _db.Marks.AsNoTracking();
