@@ -47,6 +47,9 @@
             }                     
         }
         catch(error){
+            if(error.response.status === 400){
+                errorMessage.value = error.response.data
+            }
             console.log(error)
         }                
     }

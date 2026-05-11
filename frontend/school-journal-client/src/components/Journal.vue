@@ -122,7 +122,7 @@
                     <MyChart :chartData="chartData" :options="chartOptions" />
                 </div>
                 <div>
-                    <button class="btn-gray" @click="onStatisticWindowCloseClick">
+                    <button class="btn-gray cursor-pointer" @click="onStatisticWindowCloseClick">
                         Закрыть
                     </button>
                 </div>
@@ -497,11 +497,11 @@
     }
     const onProgressUpdateFormSubmitClick = async () =>{
         try{
+            clearMessages()
             progress.value.progressUpdateDate = new Date().toISOString()
             progress.value.lessonDate = lessons.value.find(l => l.id === progress.value.lessonId).lessonDate
             await api.updateProgress(updateProgressDto.value)
             closeProgressWindow()
-            clearMessages()
             const response = await api.getProgressesForJournal(journalId)
             progresses.value = response.data
         }
