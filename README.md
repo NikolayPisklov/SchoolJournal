@@ -61,10 +61,10 @@
 ## Демонстрация работы приложения
 ### Авторизация 
 <div>
-    <img src="./screenshots/LogIn.gif" width="600">
+    <img src="./screenshots/LogIn.gif" width="1000">
 </div>
 
 ### Просмотр статистики ученика
 <div>
-    <img src="./screenshots/StudentStatistic.gif" width="600">
+    <img src="./screenshots/StudentStatistic.gif" width="1000">
 </div>
