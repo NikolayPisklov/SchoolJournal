@@ -577,6 +577,8 @@
         isLessonDetailsWindowOpen.value = true
     }
     function closeLessonDetailsWindow(){
+        newLessonHomework.value = ''
+        newLessonTheme.value = ''
         isLessonDetailsWindowOpen.value = false
         clearMessages() 
     }

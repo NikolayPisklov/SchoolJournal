@@ -15,7 +15,7 @@ namespace SchoolJournalApi.Services.DbServices
         public IQueryable<StudentClass> GetStudentsForJournal(int classId)
         {
             return _db.StudentClasses.AsNoTracking()
-                .Where(sc => sc.ClassId == classId).OrderBy(sc => sc.Student.LastName);
+                .Where(sc => sc.ClassId == classId && sc.IsActive).OrderBy(sc => sc.Student.LastName);
         }
         public async Task<bool> IsStudent(int userId) 
         {
